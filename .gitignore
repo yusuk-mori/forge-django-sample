@@ -1,0 +1,9 @@
+*.jpg
+*.xlsx
+*.pyc
+.idea
+*.png
+*.md
+*.svg
+*.zip
+*.DS_Store
