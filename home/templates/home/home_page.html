@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <!-- <link rel="stylesheet" href="https://developer.api.autodesk.com/viewingservice/v1/viewers/style.min.css"/> -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/style.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/js/themes/default/style.min.css" />
+
+    <style>
+        body {
+            margin: 0;
+        }
+        #forgeViewer {
+            width: 100%;
+            height: 600px;
+            margin: 0;
+            background-color: #F0F8FF;
+        }
+    </style>
+
+{% endblock extra_css %}
+
+{% block extra_head_js %}
+    <!-- jQuery -->
+    <script src="/static/vendors/jquery/dist/jquery.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="/static/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!-- FastClick -->
+    <script src="/static/vendors/fastclick/lib/fastclick.js"></script>
+    <!-- NProgress -->
+    <script src="/static/vendors/nprogress/nprogress.js"></script>
+    <!-- bootstrap-progressbar -->
+    <script src="/static/vendors/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+    <!-- iCheck -->
+    <script src="/static/vendors/iCheck/icheck.min.js"></script>
+    <!-- bootstrap-daterangepicker -->
+    <script src="/static/vendors/moment/min/moment.min.js"></script>
+    <script src="/static/vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
+    <!-- bootstrap-wysiwyg -->
+    <script src="/static/vendors/bootstrap-wysiwyg/js/bootstrap-wysiwyg.min.js"></script>
+    <script src="/static/vendors/jquery.hotkeys/jquery.hotkeys.js"></script>
+    <script src="/static/vendors/google-code-prettify/src/prettify.js"></script>
+    <!-- jQuery Tags Input -->
+    <script src="/static/vendors/jquery.tagsinput/src/jquery.tagsinput.js"></script>
+    <!-- Switchery -->
+    <script src="/static/vendors/switchery/dist/switchery.min.js"></script>
+    <!-- Select2 -->
+    <script src="/static/vendors/select2/dist/js/select2.full.min.js"></script>
+    <!-- Parsley -->
+    <script src="/static/vendors/parsleyjs/dist/parsley.min.js"></script>
+    <!-- Autosize -->
+    <script src="/static/vendors/autosize/dist/autosize.min.js"></script>
+    <!-- jQuery autocomplete -->
+    <script src="/static/vendors/devbridge-autocomplete/dist/jquery.autocomplete.min.js"></script>
+    <!-- starrr -->
+    <script src="/static/vendors/starrr/dist/starrr.js"></script>
+
+    <script src="/static/js/jquery.cookie.js"></script>
+    <script src="/static/js/jquery.storageapi.min.js"></script>
+
+    <script src="/static/js/custom.js"></script>
+
+    <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js?v=v2.10"></script> -->
+    <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.js?v=v2.10"></script> -->
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/viewer3D.min.js"></script>
+    <script src="/static/js/jstree.min.js"></script>
+
+    <script src="/static/js/entry.js"></script>
+    <script type="module" src="/static/js/Viewer.Extensions/Viewing.MultiModelExtensionBase/Viewing.MultiModelExtensionBase.js"></script>
+    <script type="module" src="/static/js/Viewer.Extensions.Dynamic/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js"></script>
+    <script src="/static/js/forgeviewer.js"></script>
+    <script type="text/javascript">
+
+
+        {% if IsAutheroized %}
+        var token = "{{ token }}";
+        var expires_in = "{{ expires_in }}";
+
+        $(function () {
+            console.log(location)
+
+            // 6 create an instance when the DOM is ready
+            //$('#jstree').jstree(treedata);
+            jsTreeInitialize()
+
+            // 7 bind to events triggered on the tree
+            $('#jstree').on("changed.jstree", function (e, data) {
+                if(data.selected && data.node) {
+                    console.log(data.selected);
+                    console.log(data.node.id);
+                    console.log(data.node.icon);
+
+                    if ('jstree-file' == data.node.icon) {
+                        //loadViewer(token, expires_in, data.node.id)
+                        initializeViewer(token, expires_in, data.node.id, "forgeViewer")
+                    }
+                }
+            });
+            // 8 interact with the tree - either way is OK
+            $('button').on('click', function () {
+              $('#jstree').jstree(true).select_node('child_node_1');
+              $('#jstree').jstree('select_node', 'child_node_1');
+              $.jstree.reference('#jstree').select_node('child_node_1');
+            });
+
+            //set hub-selecter event hanlder
+            $("#hub-selecter").change(function(){
+                console.log('#hub-selecter change event : ' + $(this).val())
+                $.ajax({
+                    type: "GET",
+                    dataType: "json",
+                    url: "/api/forge/jstree",
+                    cashe:false,
+                    data: { 'hubid' : $(this).val()},
+                }).done(function(result) {
+                    console.log(result);
+                    $('#jstree').jstree(true).settings.core.data = result.core.data;
+                    $('#jstree').jstree(true).refresh();
+                }).fail(function(result) {
+                    alert('error!!!');
+                });
+            });
+
+            $('#logout-btn').on('click', function () {
+
+                console.log("#token-btn click!!")
+                location.href = '/api/forge/reset/'
+            });
+
+        });
+
+        function jsTreeInitialize() {
+            var selecter = $("#hub-selecter");
+            console.log(selecter)
+            if (selecter != null) {
+                console.log('index : ' + selecter.get(0).selectedIndex)
+                console.log('value : ' + selecter.get(0).value)
+                $.ajax({
+                    type: "GET",
+                    dataType: "json",
+                    url: "/api/forge/jstree",
+                    cashe: false,
+                    data: {'hubid': selecter.get(0).value},
+                }).done(function (result) {
+                    //console.log(result);
+                    //This is first time initialization
+                    $('#jstree').jstree(result)
+
+                }).fail(function (result) {
+                    alert('error!!!');
+                });
+            }
+        }
+
+        {% else %}
+        $(function () {
+            $('#login-btn').on('click', function () {
+                console.log("#token-btn click!!")
+                $.ajax({
+                    type: "GET",
+                    dataType: "text",
+                    url: "/api/forge/gettoken",
+                    headers : {
+                        'Access-Control-Allow-Origin': 'http://127.0.0.1:8000',
+                        'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
+                    },
+                    cashe:false,
+                }).done(function(redirecturl) {
+                    console.log(redirecturl)
+                    location.href = redirecturl;
+
+                }).fail(function( jqXHR, textStatus, errorThrown ) {
+                    console.log(jqXHR)
+                    console.log(textStatus)
+                    console.log(errorThrown)
+                    alert(textStatus);
+                });
+            });
+
+        });
+        {% endif %}
+        {#% if IsAutheroized %#} //loadViewer(token, urn, expires_in); {#% endif %#}
+    </script>
+
+{% endblock extra_head_js %}
+
+
+{% block body_class %}nav-sm{% endblock %}
+
+{% block content %}
+
+    <div class="right_col" role="main" style="min-height: 928px;">
+        <div class="page-header">
+           <h2> Welcome to Forge Viewer Sample Site !! </h2>
+        </div>
+
+        <div class="row" style="margin-bottom: 30px">
+            <div class="col-xs-12">
+                <!-- <a href="/api/forge/gettoken" class="btn btn-primary {% if IsAutheroized %} django-hide {% endif %} ">login</a> -->
+                <!-- <a href="/api/forge/reset" class="btn btn-success {% if not IsAutheroized %} django-hide {% endif %} ">logged in </a> -->
+                <div class="btn-group" data-toggle="buttons">
+                    <button class="btn {% if IsAutheroized %} btn-success active {% else %} btn-default {% endif %}"  id="login-btn" >
+                        login
+                    </button>
+                    <button class="btn {% if not IsAutheroized %} btn-primary active {% else %} btn-default {% endif %}" id="logout-btn">
+                        logout
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% if IsAutheroized %}
+            <div class="col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-bars"></i>
+                            Hub Site List
+                            <small>select your site !!</small>
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <select class="form-control" id="hub-selecter">
+                            {% for itr in hublist %}
+                                <option value="{{ itr.id }}">{{itr.attributes.name}} (id: {{ itr.id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="row">
+            <div class="col-xs-4">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-folder"></i>
+                            Folder Hierarchy
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content jstree-scroll-box">
+                        <div id="jstree"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-8">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-camera-retro"></i>
+                            Forge Viewer
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <div id="forgeViewer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}

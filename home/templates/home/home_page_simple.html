@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/static/js/themes/default/style.min.css" />
+{% endblock extra_css %}
+
+{% block head_js_script %}
+    <script src="/static/vendors/jquery/dist/jquery.min.js"></script>
+    <script src="/static/js/jstree.min.js"></script>
+    <script src="/static/js/entry.js"></script>
+    <script type="text/javascript">
+        var token = "{{ token }}";
+        var expires_in = "{{ expires_in }}";
+        var urn = '';
+
+        $(function () {
+            // 6 create an instance when the DOM is ready
+            $('#jstree').jstree();
+            // 7 bind to events triggered on the tree
+            $('#jstree').on("changed.jstree", function (e, data) {
+              console.log(data.selected);
+            });
+            // 8 interact with the tree - either way is OK
+            jQuery('button').on('click', function () {
+              $('#jstree').jstree(true).select_node('child_node_1');
+              $('#jstree').jstree('select_node', 'child_node_1');
+              $.jstree.reference('#jstree').select_node('child_node_1');
+            });
+        });
+
+        {#% if IsAutheroized %#} //loadViewer(token, urn, expires_in); {#% endif %#}
+    </script>
+{% endblock head_js_script %}
+
+
+
+{% block body_class %}nav-md{% endblock %}
+
+{% block content %}
+    <div class="right_col" role="main" style="min-height: 928px;">
+        <div class="row">
+            <div class="col-xs-12" id="jstree">
+                <ul>
+                    <li><a href="#">ノード1</a>
+                        <ul>
+                            <li><a href="#">ノード1-1</a></li>
+                            <li><a href="#">ノード1-2</a></li>
+                            <li><a href="#">ノード1-3</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">ノード2</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
