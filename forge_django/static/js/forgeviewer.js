@@ -1,4 +1,3 @@
-//import VisualReportExtension from './Viewer.Extensions.Dynamic/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js'
 
 var viewerApp;
 //var viewer;

@@ -58,19 +58,194 @@
     <script src="/static/js/jquery.cookie.js"></script>
     <script src="/static/js/jquery.storageapi.min.js"></script>
 
-    <script src="/static/js/custom.js"></script>
+    <!-- <script src="/static/js/custom.js"></script> -->
 
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js?v=v2.10"></script> -->
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.js?v=v2.10"></script> -->
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/viewer3D.min.js"></script>
     <script src="/static/js/jstree.min.js"></script>
 
-    <script src="/static/js/entry.js"></script>
+    <!-- <script src="/static/js/entry.js"></script> -->
     <!-- <script type="module" src="/static/js/Viewer.Extensions/Viewing.MultiModelExtensionBase/Viewing.MultiModelExtensionBase.js"></script> -->
-    <!-- <script type="module" src="/static/js/Viewer.Extensions.Dynamic/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js"></script> -->
-    <script src="/static/js/forgeviewer.js"></script>
-    <script type="text/javascript">
+    <!-- <script type="module" src="/static/js/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js"></script> -->
+    <!-- <script src="/static/js/forgeviewer.js"></script> -->
+    <script src="/static/js/components/d3/d3.js"></script>
+    <script src="/static/js/components/d3pie/d3pie/d3pie.js"></script>
+    <script src="/static/js/components/dragula/dist/dragula.js"></script>
+    <!-- <script type="module" src="/static/js/forgeviewer.ecma.js"></script> -->
+    <script type="module">
+        import VisualReportExtension from '/static/js/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js'
+        console.log("ecma loaded !!")
+        console.log(document)
 
+
+        var viewerApp = null
+
+        class MyForgeviewer {
+            constructor()
+            {
+                console.log("MyForgeviewer constractor!!")
+
+                //this.viewerApp = null
+                this.token = "{{ token }}"
+                this.expires_in = "{{ expires_in }}"
+
+                console.log("MyForgeviewer :" + this.token)
+                console.log("MyForgeviewer :" + this.expires_in)
+
+                var elm = document.getElementById("jstree")
+                console.log(elm)
+            }
+
+            initializeViewer(token, expired_sec, urn, elmid) {
+                //DEBUG
+                console.log("token       = " + token)
+                console.log("urn         = " + urn)
+                console.log("elmid       = " + elmid)
+                console.log("expired_sec = " + expired_sec)
+
+
+                var viewerElementId = elmid
+
+                var options = {
+                    env: 'AutodeskProduction',
+                    getAccessToken: function(onGetAccessToken) {
+                        var accessToken = token;
+                        var expireTimeSeconds = expired_sec;
+                        onGetAccessToken(accessToken, expireTimeSeconds);
+                    }
+
+                };
+
+                var base64urn = this.base64encode(urn)
+                var documentId = "urn:" + base64urn;
+
+                this.registerExtentions()
+
+                var config3d = {
+                  extensions: ['VisualReportExtension']
+                };
+
+                Autodesk.Viewing.Initializer(options, this.onInitialized(viewerElementId, documentId, config3d));
+
+            }
+
+            onInitialized(viewerElementId, documentId, config3d){
+                    viewerApp = new Autodesk.Viewing.ViewingApplication(viewerElementId);
+                    viewerApp.registerViewer(viewerApp.k3D, Autodesk.Viewing.Private.GuiViewer3D, config3d);
+                    viewerApp.loadDocument(documentId, this.onDocumentLoadSuccess, this.onDocumentLoadFailure);
+            }
+
+
+            base64encode(str) {
+                var ret = "";
+                if (window.btoa) {
+                    ret = window.btoa(str);
+                } else {
+                    // IE9 support
+                    ret = window.Base64.encode(str);
+                }
+
+                // Remove ending '=' signs
+                // Use _ instead of /
+                // Use - insteaqd of +
+                // Have a look at this page for info on "Unpadded 'base64url' for "named information" URI's (RFC 6920)"
+                // which is the format being used by the Model Derivative API
+                // https://en.wikipedia.org/wiki/Base64#Variants_summary_table
+                var ret2 = ret.replace(/=/g, '').replace(/[/]/g, '_').replace(/[+]/g, '-');
+
+                console.log('base64encode result = ' + ret2);
+
+                return ret2;
+            }
+
+
+            /**
+            * Autodesk.Viewing.Document.load() success callback.
+            * Proceeds with model initialization.
+            */
+            onDocumentLoadSuccess(doc) {
+                console.log('onDocumentLoadSuccess()!!')
+
+                // We could still make use of Document.getSubItemsWithProperties()
+                // However, when using a ViewingApplication, we have access to the **bubble** attribute,
+                // which references the root node of a graph that wraps each object from the Manifest JSON.
+                var viewables = viewerApp.bubble.search({'type':'geometry'});
+                if (viewables.length === 0) {
+                    console.error('Document contains no viewables.');
+                    return;
+                }
+
+                // Choose any of the avialble viewables
+                viewerApp.selectItem(viewables[0].data, MyForgeviewer.onItemLoadSuccess, MyForgeviewer.onItemLoadFail);
+
+                //console.log(doc.getPath())
+                //console.log(doc.getPropertyDbPath())
+                //console.log(doc.getRoot())
+                //console.log(doc.getRootItem())
+                //console.log(doc.getViewGeometry(viewerApp))
+                console.log(viewerApp.getHiddenModels())
+                //console.log(viewables)
+
+            }
+
+
+            /**
+             * Autodesk.Viewing.Document.load() failure callback.
+             */
+            onDocumentLoadFailure(viewerErrorCode) {
+                console.error('onDocumentLoadFailure() - errorCode:' + viewerErrorCode);
+            }
+
+            static onItemLoadSuccess(viewer, item) {
+                console.log('onItemLoadSuccess()!');
+                console.log(viewer);
+                console.log(item);
+
+                // Congratulations! The viewer is now ready to be used.
+                console.log('Viewers are equal: ' + (viewer === viewerApp.getCurrentViewer()));
+            }
+
+            static onItemLoadFail(errorCode) {
+                console.error('onItemLoadFail() - errorCode:' + errorCode);
+            }
+
+            registerExtentions(){
+
+                //Autodesk.Viewing.theExtensionManager.registerExtension('SampleExtension', SampleExtension);
+                Autodesk.Viewing.theExtensionManager.registerExtension('VisualReportExtension', VisualReportExtension);
+            }
+        }
+
+        $(function () {
+            console.log('const viewer !!');
+            const viewer = new MyForgeviewer();
+
+            // 7 bind to events triggered on the tree
+            $('#jstree').on("changed.jstree", function (e, data) {
+                if(data.selected && data.node) {
+                    console.log(data.selected);
+                    console.log(data.node.id);
+                    console.log(data.node.icon);
+
+                    if ('jstree-file' == data.node.icon) {
+                        //loadViewer(token, expires_in, data.node.id)
+                        viewer.initializeViewer(viewer.token, viewer.expires_in, data.node.id, "forgeViewer")
+                    }
+                }
+            });
+
+            //document.getElementById("jstree").addEventListener("click", function(event){
+            //        console.log('EventListener : click')
+            //        console.log(event)
+            //        viewer.initializeViewer(viewer.token, viewer.expires_in, event.target.parentNode.id, "forgeViewer")
+            //    });
+        })
+
+    </script>
+
+
+    <script type="text/javascript">
 
         {% if IsAutheroized %}
         var token = "{{ token }}";
@@ -92,7 +267,7 @@
 
                     if ('jstree-file' == data.node.icon) {
                         //loadViewer(token, expires_in, data.node.id)
-                        initializeViewer(token, expires_in, data.node.id, "forgeViewer")
+                        //initializeViewer(token, expires_in, data.node.id, "forgeViewer")
                     }
                 }
             });

@@ -26,8 +26,13 @@ urlpatterns = [
 
     url(r'^$', forge_views.forge_index),
 
+    # Home Page
     url(r'^forge-home/', forge_views.forge_home),
     url(r'^forge-home/(?P<key>.*$)', forge_views.forge_home),
+
+    # Viewer Extension Page
+    url(r'^viewer-ext/', forge_views.viewer_ext),
+    url(r'^viewer-ext/(?P<key>.*$)', forge_views.viewer_ext),
 
     # Authentication
     url(r'^api/forge/gettoken-deprecated/', forge_views.forge_get_code_deprecated),

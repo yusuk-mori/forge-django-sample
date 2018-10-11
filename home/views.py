@@ -97,6 +97,79 @@ def forge_check_accessToken(request):
     return IsAutheroized
 
 
+def viewer_ext(request):
+    try:
+        # DEBUG
+        http.dump_request(request)
+
+        # if there is "key" variable, it means session_key has been bridged from redirect source.
+        # and, that session has OAuth authorization tokens, that has to be extracted at this step.
+        # [MEMO] Because of django session control, usually, the prime session ID of HttpRequest from client and the
+        # second session ID of redirect to external OAuth server are different, since it's cross domain communication.
+        # Then at this moment, it's necessary to extract the access token across the second session id.
+        key = request.GET.get('key')
+        if key:
+            logger.message("key = %s" % key)
+            http.bridge_session_from_key(session_key=key, dest_request=request)
+
+        data = {}
+
+        IsAutheroized = forge_check_accessToken(request)
+        logger.message('IsAutheroized = %s' % IsAutheroized )
+        if IsAutheroized:
+                # update autodek account database
+                account, created = forgeCC.get_or_create_autodesk_account(request.session['token-type'], request.session['access-token'])
+
+                # get hubs.
+                hubs = forgeDM.get_hubs(request.session['token-type'], request.session['access-token'])
+                if hubs and 'data' in hubs:
+                    hublist = hubs['data']
+
+                    # check if session hubid
+                    hubid = http.get_session_hubid(request)
+                    if not hubid:
+                        hubid = hublist[0]['id']
+
+                    if hubid:
+                        data = {
+                            'IsAutheroized' : IsAutheroized,
+                            'token' : request.session['access-token'],
+                            'expires_in': request.session['expires-in'],
+                            'hublist' : hublist,
+                            'account' : account
+                        }
+                    else:
+                        # TODO 500 page
+                        logger.error('hubid is None.')
+                else:
+                    # TODO 500 page
+                    logger.error('get_hubs return None.')
+
+        else:
+            # Celan up
+            http.clear_session(request)
+            accounts = AutodeskAccounts.objects.filter(username='guestuser')
+            if accounts :
+                logger.message('accounts[0].profileimage_m = %s' % accounts[0].profileimage_m)
+
+                data = {
+                    'IsAutheroized' : IsAutheroized,
+                    'token' : '',
+                    'expires_in': 0,
+                    'hublist': None,
+                    'account' : accounts[0]
+                }
+            else:
+                logger.message('accounts is None ...')
+
+        #return render_to_response("home/home_page.html", context=data, content_type=RequestContext(request))
+        return render(request, 'home/viewer_ext.html', context=data)
+
+    except Exception as e:
+        logger.warning(e.message, trace=True)
+        return HttpResponse(status=400)
+
+
 def forge_home(request):
     try:
         # DEBUG
