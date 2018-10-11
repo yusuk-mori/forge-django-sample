@@ -175,7 +175,10 @@ def viewer_ext(request):
                         return server_error(request)
                 else:
                     logger.error('get_hubs return None.')
-                    return server_error(request)
+                    logger.error('get_hubs return None.')
+                    # Celan up
+                    http.clear_session(request)
+                    return redirect('api/forge/reset/')
         else:
             # Celan up
             http.clear_session(request)

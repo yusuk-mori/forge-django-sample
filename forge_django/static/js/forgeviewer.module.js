@@ -2,7 +2,9 @@ console.log(location.pathname + " : loaded !!")
 
 
 console.log("try import")
-import VisualReportExtension from './Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js'
+//import VisualReportExtension from './Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js'
+import ExtensionSelectEvent from './forgeviewer.Extension.SelectEvent.js'
+
 console.log("passed import")
 
 //=====================================================================================================================
@@ -43,10 +45,10 @@ class MyForgeviewer {
         var base64urn = this.base64encode(urn)
         var documentId = "urn:" + base64urn;
 
-        this.registerExtentions()
+        this.registerExtentions();
 
         var config3d = {
-          extensions: ['VisualReportExtension']
+          extensions: ['ExtensionSelectEvent']
         };
 
         Autodesk.Viewing.Initializer(options, this.onInitialized(viewerElementId, documentId, config3d));
@@ -56,6 +58,10 @@ class MyForgeviewer {
     onInitialized(viewerElementId, documentId, config3d){
             viewerApp = new Autodesk.Viewing.ViewingApplication(viewerElementId);
             viewerApp.registerViewer(viewerApp.k3D, Autodesk.Viewing.Private.GuiViewer3D, config3d);
+
+            //Set Event
+            viewerApp.addItemSelectedObserver(MyForgeviewer.onItemSelected);
+
             viewerApp.loadDocument(documentId, this.onDocumentLoadSuccess, this.onDocumentLoadFailure);
     }
 
@@ -101,15 +107,6 @@ class MyForgeviewer {
 
         // Choose any of the avialble viewables
         viewerApp.selectItem(viewables[0].data, MyForgeviewer.onItemLoadSuccess, MyForgeviewer.onItemLoadFail);
-
-        //console.log(doc.getPath())
-        //console.log(doc.getPropertyDbPath())
-        //console.log(doc.getRoot())
-        //console.log(doc.getRootItem())
-        //console.log(doc.getViewGeometry(viewerApp))
-        console.log(viewerApp.getHiddenModels())
-        //console.log(viewables)
-
     }
 
 
@@ -122,11 +119,12 @@ class MyForgeviewer {
 
     static onItemLoadSuccess(viewer, item) {
         console.log('onItemLoadSuccess()!');
-        console.log(viewer);
         console.log(item);
 
         // Congratulations! The viewer is now ready to be used.
         console.log('Viewers are equal: ' + (viewer === viewerApp.getCurrentViewer()));
+
+        MyForgeviewer.addInformationtable(item)
     }
 
     static onItemLoadFail(errorCode) {
@@ -135,9 +133,79 @@ class MyForgeviewer {
 
     registerExtentions(){
 
-        //Autodesk.Viewing.theExtensionManager.registerExtension('SampleExtension', SampleExtension);
-        Autodesk.Viewing.theExtensionManager.registerExtension('VisualReportExtension', VisualReportExtension);
+        Autodesk.Viewing.theExtensionManager.registerExtension('ExtensionSelectEvent', ExtensionSelectEvent);
+        //Autodesk.Viewing.theExtensionManager.registerExtension('VisualReportExtension', VisualReportExtension);
     }
+
+    static addInformationtable(item){
+        console.log('addInformationtable !!');
+
+        console.log(document);
+        var container = document.getElementById("forge-panel-info");
+        if(null != container) {
+            console.log('creating DOM !!')
+
+            container.innerHTML = '';
+
+            var infolist = {}
+
+            infolist.Name = item.name();
+            infolist.PropertyDbPath = item.findPropertyDbPath();
+            infolist.NamedViews = item.getNamedViews().join(',');
+            infolist.PlacementTransform = item.getPlacementTransform();
+            infolist.Rootpath = item.getViewableRootPath();
+            infolist.guid = item.guid();
+
+            console.log(item.getNamedViews())
+
+            var tr = null
+            var th = null
+            var td = null
+
+            var table = document.createElement('table');
+            table.classList.add('table');
+            table.classList.add('table-striped');
+
+            var thead = document.createElement('thead');
+
+            tr = document.createElement('tr');
+
+            th = document.createElement('th');
+            th.innerHTML = "key"
+            tr.appendChild(th)
+
+            th = document.createElement('th');
+            th.innerHTML = "value"
+            tr.appendChild(th)
+
+            thead.appendChild(tr)
+
+            var tbody = document.createElement('tbody');
+
+            for( var key in infolist){
+
+                tr = document.createElement('tr');
+
+                th = document.createElement('th');
+                th.innerHTML = key
+                tr.appendChild(th)
+
+                td = document.createElement('td');
+                td.innerHTML = infolist[key]
+                tr.appendChild(td)
+
+                tbody.appendChild(tr)
+            }
+
+            table.appendChild(thead)
+            table.appendChild(tbody)
+            container.appendChild(table)
+
+        }else{
+            console.error('container not found !!')
+        }
+    }
+
 }
 
 //=====================================================================================================================
@@ -150,7 +218,7 @@ $(function () {
     var expires_in = $("#forgeviewer-script").attr('expires_in')
 
     // cast attribute string "true" or "false" to boolean
-    var isAutheroized = $.parseJSON($("#forgeviewer-script").attr('is_auth'))
+    var isAutheroized = "True" == ($("#forgeviewer-script").attr('is_auth')) ? true : false;
 
     console.log(token)
     console.log(expires_in)
