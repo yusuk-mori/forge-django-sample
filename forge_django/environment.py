@@ -5,10 +5,12 @@ import socket
 
 # global variable
 ENV_CONFIG = {}
+ENV_HOSTNAME = ''
 ENVIRONMENT_TYPE = ''
 FORGE_CLIENT_ID =  ''
 FORGE_CLIENT_SECRET = ''
 FORGE_AUTH_CALLBACK = ''
+ALLOWED_HOSTS = ''
 
 def ascii_encode_dict(data):
     rtn = data
@@ -34,14 +36,15 @@ def loadEnvJson():
 
 
 def getEnvironmentType():
+    global ENV_HOSTNAME
     rtn = "Development"
     try:
-        hostname = socket.gethostname()
-        if hostname :
-            if ENV_CONFIG.has_key('host_map') and ENV_CONFIG['host_map'].has_key(hostname):
-                rtn = ENV_CONFIG['host_map'][hostname]
+        ENV_HOSTNAME = socket.gethostname()
+        if ENV_HOSTNAME :
+            if ENV_CONFIG.has_key('host_map') and ENV_CONFIG['host_map'].has_key(ENV_HOSTNAME):
+                rtn = ENV_CONFIG['host_map'][ENV_HOSTNAME]
             else:
-                raise SystemError('"HOSTNAME"=[%s] is invalid for env_config.json' % hostname)
+                raise SystemError('"HOSTNAME"=[%s] is invalid for env_config.json' % ENV_HOSTNAME)
         else:
             raise SystemError('Environemnt variable "HOSTNAME" not found !!')
     except Exception as e:
@@ -56,6 +59,7 @@ try:
         FORGE_CLIENT_ID = ENV_CONFIG['type_definition'][ENVIRONMENT_TYPE]['FORGE_CLIENT_ID']
         FORGE_CLIENT_SECRET = ENV_CONFIG['type_definition'][ENVIRONMENT_TYPE]['FORGE_CLIENT_SECRET']
         FORGE_AUTH_CALLBACK = ENV_CONFIG['type_definition'][ENVIRONMENT_TYPE]['FORGE_AUTH_CALLBACK']
+        ALLOWED_HOSTS = ENV_CONFIG['type_definition'][ENVIRONMENT_TYPE]['ALLOWED_HOSTS']
     else:
         raise SystemError('getEnvironmentType() failed. Please check if current hostname and environment.json is matched.')
 

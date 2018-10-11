@@ -1,21 +1,22 @@
 
 # Django Imports
 from django.shortcuts import render
-from django.shortcuts import render_to_response
 from django.shortcuts import redirect
-from django.shortcuts import resolve_url
 
 from django.http import HttpResponse
 from django.http import HttpRequest
 from django.http import HttpResponseRedirect
-from django.http import HttpResponsePermanentRedirect
 from django.http import JsonResponse
+from django.http import HttpResponseServerError
+from django.http import HttpResponseNotFound
+from django.http import HttpResponseForbidden
+
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.template import RequestContext
 
-from django.views.decorators.csrf import csrf_exempt
+from django.views.defaults import server_error, bad_request
 
 import json
 import urllib
@@ -39,35 +40,20 @@ pp = pprint.PrettyPrinter(indent=4)
 http = httpHelper.HttpHelper()
 OAUTH_CALLBACK_URL = settings.ADSK_FORGE['FORGE_AUTH_CALLBACK']
 
+'''
+======================================================================================================
+View Utilities 
+======================================================================================================
+'''
+def get_guestuser():
+    account = None
 
-def forge_index(request):
-    return redirect('forge-home/')
+    accounts = AutodeskAccounts.objects.filter(username='guestuser')
+    if accounts and len(accounts)>0:
+        logger.message('accounts[0].profileimage_m = %s' % accounts[0].profileimage_m)
+        account = accounts[0]
 
-
-def foge_get_jstree(request):
-    # DEBUG
-    http.dump_request(request)
-
-    jstree={}
-    if (request.method == 'GET'):
-        hubid = request.GET.get('hubid')
-        if hubid:
-            # Get jstree data from DB cache table
-            jstree = forgeCC.get_jstree_from_cache(hubid)
-            if not jstree:
-                # Get BIM360 contents tree
-                # jstree = forgeDM.get_jstree_from_hub(hubid, request.session['token-type'], request.session['access-token'])
-                forgeCC.update_cache(hubid, request.session['token-type'], request.session['access-token'])
-                jstree = forgeCC.get_jstree_from_cache(hubid)
-
-            else:
-                # TODO: 400 page
-                logger.warning('bad request')
-    else:
-        # TODO: 400 page
-        logger.warning('bad request')
-
-    return JsonResponse(jstree)
+    return account
 
 
 def forge_check_accessToken(request):
@@ -97,6 +83,40 @@ def forge_check_accessToken(request):
     return IsAutheroized
 
 
+
+'''
+======================================================================================================
+Request View Handlers
+======================================================================================================
+'''
+def forge_index(request):
+    return redirect('forge-home/')
+
+def foge_get_jstree(request):
+    # DEBUG
+    http.dump_request(request)
+
+    jstree={}
+    if (request.method == 'GET'):
+        hubid = request.GET.get('hubid')
+        if hubid:
+            # Get jstree data from DB cache table
+            jstree = forgeCC.get_jstree_from_cache(hubid)
+            if not jstree:
+                # Get BIM360 contents tree
+                # jstree = forgeDM.get_jstree_from_hub(hubid, request.session['token-type'], request.session['access-token'])
+                forgeCC.update_cache(hubid, request.session['token-type'], request.session['access-token'])
+                jstree = forgeCC.get_jstree_from_cache(hubid)
+
+        else:
+            bad_request()
+    else:
+        bad_request()
+
+    return JsonResponse(jstree)
+
+
+
 def viewer_ext(request):
     try:
         # DEBUG
@@ -112,9 +132,21 @@ def viewer_ext(request):
             logger.message("key = %s" % key)
             http.bridge_session_from_key(session_key=key, dest_request=request)
 
-        data = {}
-
         IsAutheroized = forge_check_accessToken(request)
+
+        guest_account = get_guestuser()
+        if guest_account:
+            data = {
+                'IsAutheroized': IsAutheroized,
+                'token': '',
+                'expires_in': 0,
+                'hublist': None,
+                'account': guest_account
+            }
+        else:
+            logger.message('guest accounts is not found. Please check database settings...')
+            return server_error(request)
+
         logger.message('IsAutheroized = %s' % IsAutheroized )
         if IsAutheroized:
                 # update autodek account database
@@ -139,36 +171,22 @@ def viewer_ext(request):
                             'account' : account
                         }
                     else:
-                        # TODO 500 page
                         logger.error('hubid is None.')
+                        return server_error(request)
                 else:
-                    # TODO 500 page
                     logger.error('get_hubs return None.')
-
+                    return server_error(request)
         else:
             # Celan up
             http.clear_session(request)
-            accounts = AutodeskAccounts.objects.filter(username='guestuser')
-            if accounts :
-                logger.message('accounts[0].profileimage_m = %s' % accounts[0].profileimage_m)
 
-                data = {
-                    'IsAutheroized' : IsAutheroized,
-                    'token' : '',
-                    'expires_in': 0,
-                    'hublist': None,
-                    'account' : accounts[0]
-                }
-            else:
-                logger.message('accounts is None ...')
 
         #return render_to_response("home/home_page.html", context=data, content_type=RequestContext(request))
-        return render(request, 'home/viewer_ext.html', context=data)
+        return render(request, 'home/home_page.html', context=data)
 
     except Exception as e:
         logger.warning(e.message, trace=True)
-        return HttpResponse(status=400)
-
+        return server_error(request)
 
 def forge_home(request):
     try:
@@ -185,9 +203,21 @@ def forge_home(request):
             logger.message("key = %s" % key)
             http.bridge_session_from_key(session_key=key, dest_request=request)
 
-        data = {}
-
         IsAutheroized = forge_check_accessToken(request)
+
+        guest_account = get_guestuser()
+        if guest_account:
+            data = {
+                'IsAutheroized': IsAutheroized,
+                'token': '',
+                'expires_in': 0,
+                'hublist': None,
+                'account': guest_account
+            }
+        else:
+            logger.message('guest accounts is not found. Please check database settings...')
+            return server_error(request)
+
         logger.message('IsAutheroized = %s' % IsAutheroized )
         if IsAutheroized:
                 # update autodek account database
@@ -212,35 +242,22 @@ def forge_home(request):
                             'account' : account
                         }
                     else:
-                        # TODO 500 page
                         logger.error('hubid is None.')
+                        return server_error(request)
                 else:
-                    # TODO 500 page
                     logger.error('get_hubs return None.')
-
+                    return server_error(request)
         else:
             # Celan up
             http.clear_session(request)
-            accounts = AutodeskAccounts.objects.filter(username='guestuser')
-            if accounts :
-                logger.message('accounts[0].profileimage_m = %s' % accounts[0].profileimage_m)
 
-                data = {
-                    'IsAutheroized' : IsAutheroized,
-                    'token' : '',
-                    'expires_in': 0,
-                    'hublist': None,
-                    'account' : accounts[0]
-                }
-            else:
-                logger.message('accounts is None ...')
 
         #return render_to_response("home/home_page.html", context=data, content_type=RequestContext(request))
         return render(request, 'home/home_page.html', context=data)
 
     except Exception as e:
         logger.warning(e.message, trace=True)
-        return HttpResponse(status=400)
+        return server_error(request)
 
 
 def forge_session_reset(request):
@@ -250,7 +267,7 @@ def forge_session_reset(request):
 
     except Exception as e:
         logger.warning(e.message)
-        return HttpResponse(status=400)
+        return server_error(request)
 
 
 def forge_get_code_deprecated(request):
@@ -285,10 +302,10 @@ def forge_get_code_deprecated(request):
 
         else:
             logger.warning('get_3l_code_url faile !!')
-            return HttpResponse(status=400)
+            return server_error(request)
     except Exception as e:
         logger.warning(e.message, trace=True)
-        return HttpResponse(status=400)
+        return server_error(request)
 
 
 def forge_3legged_redirect(request):
@@ -315,7 +332,7 @@ def forge_3legged_redirect(request):
 
     except Exception as e:
         logger.warning(e.message, trace=True)
-        return HttpResponse(status=400)
+        return server_error(request)
 
 
 def forge_3legged_callback(request):
@@ -357,5 +374,21 @@ def forge_3legged_callback(request):
 
     except Exception as e:
         logger.warning(e.message, trace=True)
-        return HttpResponse(status=400, content=e.message)
+        return server_error(request)
 
+
+def error400(request):
+    data = {}
+    return render(request, '400.html', data)
+
+def error403(request):
+    data = {}
+    return render(request, '403.html', data)
+
+def error404(request):
+    data = {}
+    return render(request, '404.html', data)
+
+def error500(request):
+    data = {}
+    return render(request, '500.html', data)

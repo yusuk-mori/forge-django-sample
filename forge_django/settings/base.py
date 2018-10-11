@@ -139,6 +139,9 @@ STATIC_URL = '/static/'
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://forge-django-sample.com'
 
+
+ALLOWED_HOSTS=environment.ALLOWED_HOSTS
+
 ADSK_FORGE = {
         'FORGE_CLIENT_ID': environment.FORGE_CLIENT_ID,
         'FORGE_CLIENT_SECRET': environment.FORGE_CLIENT_SECRET,

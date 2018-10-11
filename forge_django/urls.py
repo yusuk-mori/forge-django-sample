@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import include, url
+from django.conf.urls import include, url, handler403, handler404, handler500
 from django.contrib import admin
 from django.conf import settings
 
@@ -45,6 +45,10 @@ urlpatterns = [
 
 ]
 
+handler400 = forge_views.error400
+handler403 = forge_views.error403
+handler404 = forge_views.error404
+handler500 = forge_views.error500
 
 if settings.DEBUG:
     from django.conf.urls.static import static
