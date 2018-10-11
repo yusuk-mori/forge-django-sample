@@ -182,7 +182,7 @@ def viewer_ext(request):
 
 
         #return render_to_response("home/home_page.html", context=data, content_type=RequestContext(request))
-        return render(request, 'home/home_page.html', context=data)
+        return render(request, 'home/viewer_ext.html', context=data)
 
     except Exception as e:
         logger.warning(e.message, trace=True)
@@ -245,12 +245,14 @@ def forge_home(request):
                         logger.error('hubid is None.')
                         return server_error(request)
                 else:
+                    # It must be HTTP Error 401: Unauthorized, then clean up session logs.
                     logger.error('get_hubs return None.')
-                    return server_error(request)
+                    # Celan up
+                    http.clear_session(request)
+                    return redirect('api/forge/reset/')
         else:
             # Celan up
             http.clear_session(request)
-
 
         #return render_to_response("home/home_page.html", context=data, content_type=RequestContext(request))
         return render(request, 'home/home_page.html', context=data)
