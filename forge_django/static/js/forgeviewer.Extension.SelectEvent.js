@@ -32,7 +32,26 @@ export default class ExtensionSelectEvent extends ExtensionBase {
     console.log(this._viewer.model)
 
     //Set Event
-    this._viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, this.onItemSelected)
+    this._viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, (item) =>{
+        console.log('onSlectedItemChanged !!')
+        console.log(item)
+        //console.log(viewGeometryItem)
+        var dbId = item.dbIdArray[0];
+        console.log('dbId :' + dbId)
+
+        this._viewer.getProperties(dbId, props => {
+            props.properties.forEach(prop => {
+
+                    var prop_name = prop.displayName + ((prop.type === 11) ? "[dbId]" : "");
+                    var prop_value = prop.displayValue;
+                    var prop_category = prop.displayCategory;
+
+                    console.log(prop_name)
+                    console.log(prop_value)
+                    console.log(prop_category)
+            });
+        });
+    });
 
     return true
   }
@@ -46,10 +65,4 @@ export default class ExtensionSelectEvent extends ExtensionBase {
     return true
   }
 
-
-  onItemSelected(item,viewGeometryItem){
-        console.log('onSlectedItemChanged !!')
-        console.log(item)
-        console.log(viewGeometryItem)
-  }
 }
