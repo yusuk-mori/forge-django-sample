@@ -2601,6 +2601,9 @@ function init_DataTables() {
 
     $('#datatable').dataTable();
 
+    $('#forge-table-prop').dataTable();
+    $('#forge-table-info').dataTable();
+
     $('#datatable-keytable').DataTable({
         keys: true
     });

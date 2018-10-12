@@ -119,12 +119,8 @@ class MyForgeviewer {
 
     static onItemLoadSuccess(viewer, item) {
         console.log('onItemLoadSuccess()!');
-        console.log(item);
-
         // Congratulations! The viewer is now ready to be used.
         console.log('Viewers are equal: ' + (viewer === viewerApp.getCurrentViewer()));
-
-        MyForgeviewer.addInformationtable(item)
     }
 
     static onItemLoadFail(errorCode) {
@@ -137,69 +133,79 @@ class MyForgeviewer {
         //Autodesk.Viewing.theExtensionManager.registerExtension('VisualReportExtension', VisualReportExtension);
     }
 
-    static addInformationtable(item){
-        console.log('addInformationtable !!');
+    static addInformationTable(item){
+        console.log('addInformationTable !!');
+        var wrapper = document.getElementById("forge-table-info_wrapper");
+        var parent = wrapper.parentNode
 
-        console.log(document);
-        var container = document.getElementById("forge-panel-info");
-        if(null != container) {
-            console.log('creating DOM !!')
+        //var container = document.getElementById("forge-table-info");
+        var container = document.createElement('table');
+        container.setAttribute("id", "forge-table-info");
+        container.classList.add("table", "table-striped", "table-bordered");
 
-            container.innerHTML = '';
-
-            var infolist = {}
-
+        if(null != wrapper) {
+            console.log('creating DOM !!');
+            //container.innerHTML = '';
+            let infolist = {};
+            // [MEMO] item type is BubbleNode.
+            // See https://forge.autodesk.com/en/docs/viewer/v6/reference/javascript/bubblenode/
             infolist.Name = item.name();
             infolist.PropertyDbPath = item.findPropertyDbPath();
-            infolist.NamedViews = item.getNamedViews().join(',');
             infolist.PlacementTransform = item.getPlacementTransform();
             infolist.Rootpath = item.getViewableRootPath();
             infolist.guid = item.guid();
+            infolist.urn = item.urn(true);
+            infolist.tag = item.getTag();
+            infolist.isGeometry = item.isGeometry();
+            infolist.isGeomLeaf = item.isGeomLeaf();
+            infolist.isMetadata = item.isMetadata();
 
-            console.log(item.getNamedViews())
+            let tr = null;
+            let th = null;
+            let td = null;
 
-            var tr = null
-            var th = null
-            var td = null
-
-            var table = document.createElement('table');
-            table.classList.add('table');
-            table.classList.add('table-striped');
-
-            var thead = document.createElement('thead');
+            let thead = document.createElement('thead');
 
             tr = document.createElement('tr');
 
             th = document.createElement('th');
-            th.innerHTML = "key"
-            tr.appendChild(th)
+            th.innerHTML = "key";
+            tr.appendChild(th);
 
             th = document.createElement('th');
-            th.innerHTML = "value"
-            tr.appendChild(th)
+            th.innerHTML = "value";
+            tr.appendChild(th);
 
-            thead.appendChild(tr)
+            thead.appendChild(tr);
 
-            var tbody = document.createElement('tbody');
+            let tbody = document.createElement('tbody');
 
-            for( var key in infolist){
+            for( let key in infolist){
 
                 tr = document.createElement('tr');
 
                 th = document.createElement('th');
-                th.innerHTML = key
-                tr.appendChild(th)
+                th.innerHTML = key;
+                tr.appendChild(th);
 
                 td = document.createElement('td');
-                td.innerHTML = infolist[key]
+                td.innerHTML = infolist[key];
                 tr.appendChild(td)
 
                 tbody.appendChild(tr)
             }
 
-            table.appendChild(thead)
-            table.appendChild(tbody)
-            container.appendChild(table)
+            container.appendChild(thead);
+            container.appendChild(tbody);
+
+            //[MEMO] Because of JQuery datatables.net sepcification,
+            // To reset data table, it's necessary to remove parent warapper div element once.
+            // This code is just tips for that.
+            wrapper.remove();
+            parent.appendChild(container);
+            // Reset dynamic data table widgets
+            //init_DataTables();
+            init_SingleDataTables("#forge-table-info");
 
         }else{
             console.error('container not found !!')

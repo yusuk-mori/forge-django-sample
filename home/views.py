@@ -11,15 +11,15 @@ from django.http import HttpResponseServerError
 from django.http import HttpResponseNotFound
 from django.http import HttpResponseForbidden
 
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.template import RequestContext
+#from django.contrib import auth
+#from django.contrib.auth.decorators import login_required
+#from django.contrib.auth.models import User
+#from django.template import RequestContext
 
 from django.views.defaults import server_error, bad_request
+from django.contrib.sites.shortcuts import get_current_site
 
 import json
-import urllib
 import urlparse
 import pprint
 
@@ -178,7 +178,7 @@ def viewer_ext(request):
                     logger.error('get_hubs return None.')
                     # Celan up
                     http.clear_session(request)
-                    return redirect('api/forge/reset/')
+                    return redirect('/api/forge/reset/')
         else:
             # Celan up
             http.clear_session(request)
@@ -252,7 +252,7 @@ def forge_home(request):
                     logger.error('get_hubs return None.')
                     # Celan up
                     http.clear_session(request)
-                    return redirect('api/forge/reset/')
+                    return redirect('/api/forge/reset/')
         else:
             # Celan up
             http.clear_session(request)
@@ -365,17 +365,26 @@ def forge_3legged_callback(request):
                     # Save access token and expire sec to current session store dictionary.
                     http.save_session(request, response)
 
+                    current_site = get_current_site(request)
+                    # Check if it's not corss origin
+                    if 'HTTP_REFERER' in request.META and current_site.domain in request.META['HTTP_REFERER']:
+                        split = urlparse.urlsplit(request.META['HTTP_REFERER'])
+                        redirecturl = split.geturl()
+                    else:
+                        redirecturl = '/forge-home/'
+
+                    logger.message('redirect base url = %s' % redirecturl)
                     # [MEMO] In case of first Autodesk Account login, the request has not yet session_key,
                     # but in case of second or later login, it has already session_key.
                     # To avoid "concatenate error", check whether session_key is exist or not.
                     # [CAUTION] You never select Django session cookie mode,
                     #  since it doesn't work the following session_key inheritation.
                     if request.session.session_key:
-                        return HttpResponseRedirect('/forge-home/?key=%s' % request.session.session_key)
+                        return HttpResponseRedirect('%s?key=%s' % (redirecturl, request.session.session_key))
                     else:
-                        return HttpResponseRedirect('/forge-home/')
+                        return HttpResponseRedirect(redirecturl)
                 else:
-                    return HttpResponse(status=400, content='3 legged access token authentication failed.')
+                    return bad_request()
 
     except Exception as e:
         logger.warning(e.message, trace=True)
