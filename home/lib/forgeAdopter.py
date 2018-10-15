@@ -447,7 +447,7 @@ class ForgeDataManagementAdopter(ForgeBaseAdopter):
                 name = items['data'][index]['attributes']['displayName']
                 treedata[id] = {'type' : type , 'name' : name }
 
-                if 'folders' == type and recurse < 10:
+                if 'folders' == type and recurse < 5:
                     recurse += 1
                     child_tree = self.get_contents_tree_recurce(projectid, id, token_type, token, recurse)
                     if child_tree :
@@ -524,16 +524,16 @@ class ForgeDataManagementAdopter(ForgeBaseAdopter):
                     parent = target_resid
 
                 if 'folders' == type :
-                    icon = "jstree-folder"
+                    icon = "fa fa-folder"
                     id = items['data'][index]['id']
                 else:
-                    icon = "jstree-file"
+                    icon = "fa fa-file-o"
                     id = items['data'][index]['relationships']['tip']['data']['id']
 
                 itr = { 'id':id, 'parent':parent, 'text':text, 'icon':icon, 'lastmodtime':lastmod }
                 items_array.append(itr)
 
-                if 'folders' == type and recurse < 10:
+                if 'folders' == type and recurse < 5:
                     recurse += 1
                     new_list = self.get_contents_jstree_list_recurse(projectid, id, token_type, token, recurse)
                     items_array.extend(new_list)

@@ -137,6 +137,59 @@ SelectEventExtension.prototype.load = function() {
             container.setAttribute("id", "forge-table-info");
             container.classList.add("table", "table-striped", "table-bordered");
 
+            geom = item.model.getData();
+            console.log(geom);
+
+            var cbCount = 0; // count pending callbacks
+            var components = []; // store the results
+            var tree; // the instance tree
+
+            function getLeafComponentsRec(current, parent) {
+                cbCount++;
+                let isfolder = false;
+                if (tree.getChildCount(current) != 0) {
+                    isfolder = true;
+                    tree.enumNodeChildren(current, function (children) {
+                        getLeafComponentsRec(children, current);
+                    }, false);
+                }
+
+                if (null != parent){
+                    parentname =  parent
+                    if(true == isfolder)
+                    {
+                        iconname = "fa fa-folder"
+                    }else {
+                        iconname = "fa fa-file-o"
+                    }
+                }else{
+                    parentname = "#"
+                    iconname = "fa fa-archive"
+                }
+
+                let row = { 'id':current,'parent':parentname, 'text':tree.getNodeName(current), 'icon': iconname };
+                components.push(row);
+
+
+                if (--cbCount == 0) {
+                    console.log("getLeafComponentsRec finished!!")
+                    return components
+                }
+            }
+
+            item.model.getObjectTree( (objectTree)=>{
+                console.log("getObjectTree success!!")
+                tree = objectTree;
+
+                var allLeafComponents = getLeafComponentsRec(tree.getRootId(), null);
+                console.log(allLeafComponents)
+                console.log(typeof(allLeafComponents))
+                //set tree
+                console.log($('#jstree-objects').jstree(true).settings.core)
+                $('#jstree-objects').jstree(true).settings.core.data = allLeafComponents;
+                $('#jstree-objects').jstree(true).refresh();
+            });
+
             console.log('creating DOM !!');
             //container.innerHTML = '';
             let infolist = {};
@@ -332,6 +385,23 @@ SelectEventExtension.prototype.onToolbarCreated = function() {
   this.createUI();
 };
 
+function getAlldbIds (rootId, treeitem) {
+	var alldbId = [];
+	if (!rootId) {
+		return alldbId;
+	}
+	var queue = [];
+	queue.push(rootId);
+	while (queue.length > 0) {
+		var node = queue.shift();
+		alldbId.push(node);
+		treeitem.enumNodeChildren(node, function(childrenIds) {
+			queue.push(childrenIds);
+		});
+	}
+	return alldbId;
+}
+
 //=====================================================================================================================
 // Document on load event
 //=====================================================================================================================
@@ -362,7 +432,7 @@ $(function () {
                 console.log(data.selected);
                 console.log(data.node.id);
                 console.log(data.node.icon);
-                if ('jstree-file' == data.node.icon) {
+                if (data.node.icon.match(/fa-file-o/)) {
                     initializeViewer(token, expires_in, data.node.id, "forgeViewer")
                 }
             }
@@ -376,7 +446,8 @@ $(function () {
 
         //set hub-selecter event hanlder
         $("#hub-selecter").change(function(){
-            console.log('#hub-selecter change event : ' + $(this).val())
+            console.log('#hub-selecter change event : ' + $(this).val());
+            showLoading();
             $.ajax({
                 type: "GET",
                 dataType: "json",
@@ -389,7 +460,10 @@ $(function () {
                 $('#jstree').jstree(true).refresh();
             }).fail(function(result) {
                 alert('error!!!');
+            }).always(function(){
+                hideLoading();
             });
+
         });
 
         $('#logout-btn').on('click', function () {
@@ -418,7 +492,7 @@ $(function () {
                 console.log(jqXHR)
                 console.log(textStatus)
                 console.log(errorThrown)
-                alert(textStatus);
+                //alert(textStatus);
             });
         });
     }
@@ -430,6 +504,7 @@ function jsTreeInitialize() {
     if (selecter != null) {
         console.log('index : ' + selecter.get(0).selectedIndex)
         console.log('value : ' + selecter.get(0).value)
+        showLoading();
         $.ajax({
             type: "GET",
             dataType: "json",
@@ -440,9 +515,25 @@ function jsTreeInitialize() {
             //console.log(result);
             //This is first time initialization
             $('#jstree').jstree(result)
-
         }).fail(function (result) {
             alert('error!!!');
+        }).always(function () {
+            hideLoading();
         });
     }
+
+    let defaultdata = {}
+    defaultdata["core"] = {}
+    defaultdata["core"]["data"] = [{"id":1000, "parent" :"#", "text":"No Model Selected", "icon":"fa fa-warning" }]
+    $('#jstree-objects').jstree(defaultdata);
+}
+
+function hideLoading(){
+    $( "#loading" ).fadeOut("slow");
+    $( "#loading" ).addClass("is-hide");
+}
+
+function showLoading(){
+    $( "#loading" ).fadeIn("slow");
+    $( "#loading" ).removeClass("is-hide");
 }

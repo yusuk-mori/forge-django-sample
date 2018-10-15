@@ -65,12 +65,13 @@
 {% block body_class %}nav-sm{% endblock %}
 
 {% block content %}
-
     <div class="right_col" role="main" style="min-height: 928px;">
+        <div class="loading-bg is-hide" id="loading">
+            <img src="/static/images/loading.gif" class="loading-icon">
+        </div>
         <div class="page-header">
            <h2> Welcome to Forge Viewer Sample Site !! </h2>
         </div>
-
         <div class="row" style="margin-bottom: 30px">
             <div class="col-xs-12">
                 <!-- <a href="/api/forge/gettoken" class="btn btn-primary {% if IsAutheroized %} django-hide {% endif %} ">login</a> -->
@@ -86,6 +87,41 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-exclamation-circle"></i>
+                            READE ME / NOTES
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <ul class="to_do">
+                            <li>
+                                <i class="fa fa-exclamation"></i>
+                                <small> You need to get access to your BIM360 Docs / Team. Recomended Hub Site is [ <a href="https://docs.b360.autodesk.com/projects/3c37a064-9aad-4484-aac3-5afc3a06b623/folders/urn:adsk.wipprod:fs.folder:co.iusGs8j1TIOpX-21u-SfZg/detail"> Autodesk Cunsulting Japan</a> ]</small>
+                            </li>
+                            <li>
+                                <i class="fa fa-exclamation"></i>
+                                <small> At first time, this application fetches all BIM360 Docs / Team folders at once, (maximum hierarchy depth is 5).</small>
+                            </li>
+                            <li>
+                                <i class="fa fa-exclamation"></i>
+                                <small>Only the following list is supported modern browsers.</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="row">
             {% if IsAutheroized %}
             <div class="col-xs-12">
@@ -141,8 +177,8 @@
                     <div class="col-xs-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2><i class="fa fa-table"></i>
-                                    Selected Item Raw Properties
+                                <h2><i class="fa fa-database"></i>
+                                    Model Hierarchy
                                 </h2>
                                 <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
                                     <li>
@@ -153,23 +189,8 @@
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
-                            <div class="x_content"  id="panel-prop">
-                                <table id="forge-table-prop" class="table table-striped table-bordered">
-                                    <thead>
-                                      <tr>
-                                        <th>Key</th>
-                                        <th>Value</th>
-                                        <th>type</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                        <th>Category</th>
-                                        <th>fooo</th>
-                                        <th>varrr</th>
-                                      </tr>
-                                    </tbody>
-                                </table>
+                            <div class="x_content">
+                                <div id="jstree-objects"></div>
                             </div>
                         </div>
                     </div>
@@ -195,11 +216,42 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12">
+        </div>
+        <div class="col-xs-6">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2><i class="fa fa-table"></i>
+                        Model Raw Properties
+                    </h2>
+                    <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                        <li>
+                            <a class="collapse-link">
+                                <i class="fa fa-chevron-up"></i>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content" id="panel-info">
+                   <table id="forge-table-info" class="table table-striped table-bordered">
+                        <thead>
+                          <tr>
+                            <th>Key</th>
+                            <th>Value</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-6">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2><i class="fa fa-info"></i>
-                            Model Information
+                        <h2><i class="fa fa-table"></i>
+                            Item Raw Properties
                         </h2>
                         <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
                             <li>
@@ -210,12 +262,13 @@
                         </ul>
                         <div class="clearfix"></div>
                     </div>
-                    <div class="x_content" id="panel-info">
-                        <table id="forge-table-info" class="table table-striped table-bordered">
+                    <div class="x_content">
+                        <table id="forge-table-prop" class="table table-striped table-bordered">
                             <thead>
                               <tr>
                                 <th>Key</th>
                                 <th>Value</th>
+                                <th>Category</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -225,7 +278,6 @@
                 </div>
             </div>
         </div>
-
     </div>
 
 {% endblock %}
