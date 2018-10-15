@@ -4,7 +4,9 @@ var viewerApp;
 var viewerElementId
 
 
-
+//=====================================================================================================================
+// Viewer Initialization
+//=====================================================================================================================
 function initializeViewer(token, expired_sec, urn, elmid) {
     //DEBUG
     console.log("token       = " + token)
@@ -30,7 +32,7 @@ function initializeViewer(token, expired_sec, urn, elmid) {
     registerExtentions()
 
     var config3d = {
-      extensions: ['SampleExtension']
+      extensions: ['SelectEventExtension']
     };
 
     Autodesk.Viewing.Initializer(options, function onInitialized(){
@@ -40,7 +42,9 @@ function initializeViewer(token, expired_sec, urn, elmid) {
     });
 
 }
-
+//=====================================================================================================================
+// Viewer Extension Common Module Framework
+//=====================================================================================================================
 /**
 * Autodesk.Viewing.Document.load() success callback.
 * Proceeds with model initialization.
@@ -70,9 +74,6 @@ function onDocumentLoadFailure(viewerErrorCode) {
 
 function onItemLoadSuccess(viewer, item) {
     console.log('onItemLoadSuccess()!');
-    console.log(viewer);
-    console.log(item);
-
     // Congratulations! The viewer is now ready to be used.
     console.log('Viewers are equal: ' + (viewer === viewerApp.getCurrentViewer()));
 }
@@ -80,7 +81,9 @@ function onItemLoadSuccess(viewer, item) {
 function onItemLoadFail(errorCode) {
     console.error('onItemLoadFail() - errorCode:' + errorCode);
 }
-
+/**
+ * BASE64 Utility
+ */
 function base64encode(str) {
     var ret = "";
     if (window.btoa) {
@@ -102,73 +105,344 @@ function base64encode(str) {
 
     return ret2;
 }
-
+/**
+ * extension register
+ */
 function registerExtentions(){
 
-    Autodesk.Viewing.theExtensionManager.registerExtension('SampleExtension', SampleExtension);
-    //Autodesk.Viewing.theExtensionManager.registerExtension('VisualReportExtension', VisualReportExtension);
+    Autodesk.Viewing.theExtensionManager.registerExtension('SelectEventExtension', SelectEventExtension);
 }
 
-function SampleExtension(viewer, options) {
+//=====================================================================================================================
+// Viewer Extension Core Definitions
+//=====================================================================================================================
+function SelectEventExtension(viewer, options) {
   Autodesk.Viewing.Extension.call(this, viewer, options);
 }
 
-SampleExtension.prototype = Object.create(Autodesk.Viewing.Extension.prototype);
-SampleExtension.prototype.constructor = SampleExtension;
+SelectEventExtension.prototype = Object.create(Autodesk.Viewing.Extension.prototype);
+SelectEventExtension.prototype.constructor = SelectEventExtension;
 
-SampleExtension.prototype.load = function() {
-  alert('SampleExtension is loaded!');
+SelectEventExtension.prototype.load = function() {
+    console.log('SelectEventExtension is loaded!');
 
-  if (this.viewer.toolbar) {
-    // Toolbar is already available, create the UI
-    this.createUI();
-  } else {
-    // Toolbar hasn't been created yet, wait until we get notification of its creation
-    this.onToolbarCreatedBinded = this.onToolbarCreated.bind(this);
-    this.viewer.addEventListener(av.TOOLBAR_CREATED_EVENT, this.onToolbarCreatedBinded);
-  }
+    //Set Model Loaded Event
+    this.viewer.addEventListener(Autodesk.Viewing.MODEL_ROOT_LOADED_EVENT, (item) => {
+        console.log("Autodesk.Viewing.MODEL_ROOT_LOADED_EVENT !!")
+        console.log(item);
+        let wrapper = document.getElementById("forge-table-info_wrapper");
+        if(null != wrapper) {
+            //var container = document.getElementById("forge-table-info");
+            let container = document.createElement('table');
+            container.setAttribute("id", "forge-table-info");
+            container.classList.add("table", "table-striped", "table-bordered");
+
+            console.log('creating DOM !!');
+            //container.innerHTML = '';
+            let infolist = {};
+            // [MEMO] item type is Model.
+            // See https://forge.autodesk.com/en/docs/viewer/v6/reference/javascript/model/
+            infolist.geomPolyCount = item.model.geomPolyCount();
+            infolist.RootId = item.model.getRootId();
+            infolist.UnitScale = item.model.getUnitScale();
+            infolist.UpVector = JSON.stringify(item.model.getUpVector());
+            infolist.hasTopology = item.model.hasTopology();
+            infolist.instancePolyCount = item.model.instancePolyCount();
+            infolist.is3d = item.model.is3d();
+            infolist.isAEC = item.model.isAEC();
+
+            let doc = item.model.getDocumentNode();
+            if (null != doc){
+                infolist.Name = doc.name();
+                infolist.PropertyDbPath = doc.findPropertyDbPath();
+                infolist.PlacementTransform = doc.getPlacementTransform();
+                infolist.Rootpath = doc.getViewableRootPath();
+                infolist.guid = doc.guid();
+                infolist.urn = doc.urn(true);
+                infolist.tag = doc.getTag();
+                infolist.isGeometry = doc.isGeometry();
+                infolist.isGeomLeaf = doc.isGeomLeaf();
+                infolist.isMetadata = doc.isMetadata();
+            }
+
+            let tr;
+            let th;
+            let td;
+
+            let thead = document.createElement('thead');
+
+            tr = document.createElement('tr');
+
+            th = document.createElement('th');
+            th.innerHTML = "key";
+            tr.appendChild(th);
+
+            th = document.createElement('th');
+            th.innerHTML = "value";
+            tr.appendChild(th);
+
+            thead.appendChild(tr);
+
+            let tbody = document.createElement('tbody');
+
+            for( let key in infolist){
+
+                tr = document.createElement('tr');
+
+                th = document.createElement('th');
+                th.innerHTML = key;
+                tr.appendChild(th);
+
+                td = document.createElement('td');
+                td.innerHTML = infolist[key];
+                tr.appendChild(td)
+
+                tbody.appendChild(tr)
+            }
+
+            container.appendChild(thead);
+            container.appendChild(tbody);
+
+            //Reset current table wrapper
+            let parent = wrapper.parentNode;
+            parent.innerHTML = '';
+            parent.appendChild(container);
+
+            //[MEMO] Because of JQuery datatables.net sepcification,
+            // To reset data table, it's necessary to remove parent warapper div element once.
+            // This code is just tips for that.
+            $("#forge-table-info").DataTable()
+
+        }else{
+            console.error('container not found !!')
+        }
+    });
+
+    //Set Item Selected Event
+    this.viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, (item) =>{
+        console.log('Autodesk.Viewing.SELECTION_CHANGED_EVENT !!');
+        console.log(item);
+        let wrapper = document.getElementById("forge-table-prop_wrapper");
+        if (null != wrapper) {
+
+            let dbId = item.dbIdArray[0];
+            console.log('dbId :' + dbId);
+
+            //var container = document.getElementById("forge-table-prop");
+            //container.innerHTML = '';
+            let container = document.createElement('table');
+            container.setAttribute("id", "forge-table-prop");
+            container.classList.add("table", "table-striped", "table-bordered");
+
+            let tr;
+            let th;
+            let td;
+
+            let thead = document.createElement('thead');
+
+            tr = document.createElement('tr');
+
+            th = document.createElement('th');
+            th.innerHTML = "key";
+            tr.appendChild(th);
+
+            th = document.createElement('th');
+            th.innerHTML = "value";
+            tr.appendChild(th);
+
+            th = document.createElement('th');
+            th.innerHTML = "type";
+            tr.appendChild(th);
+
+            thead.appendChild(tr);
+
+            this.viewer.getProperties(dbId, props => {
+                //Iterate all propeties
+                let tbody = document.createElement('tbody');
+                let prop_key = null;
+                let prop_value = null;
+                let prop_category = null;
+
+                props.properties.forEach(prop => {
+                    prop_key = prop.displayName + ((prop.type === 11) ? "[dbId]" : "");
+                    prop_value = prop.displayValue;
+                    prop_category = prop.displayCategory;
+
+                    //console.log(prop_key)
+                    //console.log(prop_value)
+                    //console.log(prop_category)
+
+                    tr = document.createElement('tr');
+
+                    td = document.createElement('td');
+                    td.innerHTML = prop_key;
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.innerHTML = prop_value;
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.innerHTML = prop_category;
+                    tr.appendChild(td);
+
+                    tbody.appendChild(tr)
+                });
+
+                let children = tbody.childNodes;
+                console.log(children)
+                console.log(children.length)
+                children.forEach(function (currentValue, currentIndex, listObj) {
+                    console.log(currentValue)
+                });
+
+                container.appendChild(thead);
+                container.appendChild(tbody);
+
+                //Reset current table wrapper
+                let parent = wrapper.parentNode;
+                parent.innerHTML = '';
+                parent.appendChild(container);
+
+                //[MEMO] Because of JQuery datatables.net sepcification,
+                // To reset data table, it's necessary to remove parent warapper div element once.
+                // This code is just tips for that.
+                $("#forge-table-prop").DataTable();
+            })
+
+
+        } else {
+            console.error('container not found !!')
+        }
+    });
 
   return true;
 };
 
-SampleExtension.prototype.unload = function() {
+SelectEventExtension.prototype.unload = function() {
   alert('MyAwesomeExtension is now unloaded!');
     this.viewer.toolbar.removeControl(this.subToolbar);
   return true;
 };
 
 
-SampleExtension.prototype.onToolbarCreated = function() {
+SelectEventExtension.prototype.onToolbarCreated = function() {
   this.viewer.removeEventListener(av.TOOLBAR_CREATED_EVENT, this.onToolbarCreatedBinded);
   this.onToolbarCreatedBinded = null;
   this.createUI();
 };
 
-SampleExtension.prototype.createUI = function() {
-  alert('TODO: Create Toolbar!');
+//=====================================================================================================================
+// Document on load event
+//=====================================================================================================================
+$(function () {
+    console.log('Viewer initialization on Document loaded event ...');
 
-  var viewer = this.viewer;
+    var token = $("#forgeviewer-script").attr('token')
+    var expires_in = $("#forgeviewer-script").attr('expires_in')
 
-  // Button 1
-  var button1 = new Autodesk.Viewing.UI.Button('my-view-front-button');
-  button1.onClick = function(e) {
-      viewer.setViewCube('front');
-  };
-  button1.addClass('fa-adn');
-  button1.setToolTip('View front');
+    // cast attribute string "true" or "false" to boolean
+    var isAutheroized = "True" == ($("#forgeviewer-script").attr('is_auth')) ? true : false;
 
-  // Button 2
-  var button2 = new Autodesk.Viewing.UI.Button('my-view-back-button');
-  button2.onClick = function(e) {
-      viewer.setViewCube('back');
-  };
-  button2.addClass('fa-adn');
-  button2.setToolTip('View Back');
+    console.log(token)
+    console.log(expires_in)
+    console.log(typeof(isAutheroized))
 
-  // SubToolbar
-  this.subToolbar = new Autodesk.Viewing.UI.ControlGroup('my-custom-view-toolbar');
-  this.subToolbar.addControl(button1);
-  this.subToolbar.addControl(button2);
+    //const viewer = new MyForgeviewer();
 
-  viewer.toolbar.addControl(this.subToolbar);
-};
+    if(true == isAutheroized){
+        console.log('switch to isAutheroized !!')
+        // 6 create an instance when the DOM is ready
+        //$('#jstree').jstree(treedata);
+        jsTreeInitialize()
+
+        // 7 bind to events triggered on the tree
+        $('#jstree').on("changed.jstree", function (e, data) {
+            if(data.selected && data.node) {
+                console.log(data.selected);
+                console.log(data.node.id);
+                console.log(data.node.icon);
+                if ('jstree-file' == data.node.icon) {
+                    initializeViewer(token, expires_in, data.node.id, "forgeViewer")
+                }
+            }
+        });
+        // 8 interact with the tree - either way is OK
+        $('button').on('click', function () {
+          $('#jstree').jstree(true).select_node('child_node_1');
+          $('#jstree').jstree('select_node', 'child_node_1');
+          $.jstree.reference('#jstree').select_node('child_node_1');
+        });
+
+        //set hub-selecter event hanlder
+        $("#hub-selecter").change(function(){
+            console.log('#hub-selecter change event : ' + $(this).val())
+            $.ajax({
+                type: "GET",
+                dataType: "json",
+                url: "/api/forge/jstree",
+                cashe:false,
+                data: { 'hubid' : $(this).val()},
+            }).done(function(result) {
+                console.log(result);
+                $('#jstree').jstree(true).settings.core.data = result.core.data;
+                $('#jstree').jstree(true).refresh();
+            }).fail(function(result) {
+                alert('error!!!');
+            });
+        });
+
+        $('#logout-btn').on('click', function () {
+
+            console.log("#token-btn click!!")
+            location.href = '/api/forge/reset/'
+        });
+
+    }else{
+        $('#login-btn').on('click', function () {
+            console.log("#token-btn click!!")
+            $.ajax({
+                type: "GET",
+                dataType: "text",
+                url: "/api/forge/gettoken",
+                headers : {
+                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000',
+                    'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
+                },
+                cashe:false,
+            }).done(function(redirecturl) {
+                console.log(redirecturl)
+                location.href = redirecturl;
+
+            }).fail(function( jqXHR, textStatus, errorThrown ) {
+                console.log(jqXHR)
+                console.log(textStatus)
+                console.log(errorThrown)
+                alert(textStatus);
+            });
+        });
+    }
+});
+
+function jsTreeInitialize() {
+    var selecter = $("#hub-selecter");
+    console.log(selecter)
+    if (selecter != null) {
+        console.log('index : ' + selecter.get(0).selectedIndex)
+        console.log('value : ' + selecter.get(0).value)
+        $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: "/api/forge/jstree",
+            cashe: false,
+            data: {'hubid': selecter.get(0).value},
+        }).done(function (result) {
+            //console.log(result);
+            //This is first time initialization
+            $('#jstree').jstree(result)
+
+        }).fail(function (result) {
+            alert('error!!!');
+        });
+    }
+}
