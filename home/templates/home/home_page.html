@@ -5,6 +5,13 @@
     <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/style.min.css" type="text/css">
     <link rel="stylesheet" href="/static/js/themes/default/style.min.css" />
 
+    <link href="/static/vendors/datatables.net-bs/css/dataTables.bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendors/datatables.net-buttons-bs/css/buttons.bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendors/datatables.net-fixedheader-bs/css/fixedHeader.bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendors/datatables.net-responsive-bs/css/responsive.bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendors/datatables.net-scroller-bs/css/scroller.bootstrap.min.css" rel="stylesheet">
+
+
     <style>
         body {
             margin: 0;
@@ -19,148 +26,44 @@
 
 {% endblock extra_css %}
 
-{% block extra_head_js %}
+{% block extra_js %}
 
+    <!-- Datatables -->
+    <script src="/static/vendors/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="/static/vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+    <script src="/static/vendors/datatables.net-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="/static/vendors/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+    <script src="/static/vendors/datatables.net-buttons/js/buttons.flash.min.js"></script>
+    <script src="/static/vendors/datatables.net-buttons/js/buttons.html5.min.js"></script>
+    <script src="/static/vendors/datatables.net-buttons/js/buttons.print.min.js"></script>
+    <script src="/static/vendors/datatables.net-fixedheader/js/dataTables.fixedHeader.min.js"></script>
+    <script src="/static/vendors/datatables.net-keytable/js/dataTables.keyTable.min.js"></script>
+    <script src="/static/vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="/static/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js"></script>
+    <script src="/static/vendors/datatables.net-scroller/js/dataTables.scroller.min.js"></script>
     <script src="/static/js/custom.js"></script>
-
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js?v=v2.10"></script> -->
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.js?v=v2.10"></script> -->
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/viewer3D.min.js"></script>
     <script src="/static/js/jstree.min.js"></script>
+    <!--<script type="module" src="/static/js/forgeviewer.module.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script> -->
+    <script src="/static/js/forgeviewer.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script>
 
-    <script src="/static/js/entry.js"></script>
-    <!-- <script type="module" src="/static/js/Viewer.Extensions/Viewing.MultiModelExtensionBase/Viewing.MultiModelExtensionBase.js"></script> -->
-    <!-- <script type="module" src="/static/js/Viewer.Extensions.Dynamic/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js"></script> -->
-    <script src="/static/js/forgeviewer.js"></script>
-    <script type="text/javascript">
-
-
-        {% if IsAutheroized %}
-        var token = "{{ token }}";
-        var expires_in = "{{ expires_in }}";
-
-        $(function () {
-            console.log(location)
-
-            // 6 create an instance when the DOM is ready
-            //$('#jstree').jstree(treedata);
-            jsTreeInitialize()
-
-            // 7 bind to events triggered on the tree
-            $('#jstree').on("changed.jstree", function (e, data) {
-                if(data.selected && data.node) {
-                    console.log(data.selected);
-                    console.log(data.node.id);
-                    console.log(data.node.icon);
-
-                    if ('jstree-file' == data.node.icon) {
-                        //loadViewer(token, expires_in, data.node.id)
-                        initializeViewer(token, expires_in, data.node.id, "forgeViewer")
-                    }
-                }
-            });
-            // 8 interact with the tree - either way is OK
-            $('button').on('click', function () {
-              $('#jstree').jstree(true).select_node('child_node_1');
-              $('#jstree').jstree('select_node', 'child_node_1');
-              $.jstree.reference('#jstree').select_node('child_node_1');
-            });
-
-            //set hub-selecter event hanlder
-            $("#hub-selecter").change(function(){
-                console.log('#hub-selecter change event : ' + $(this).val())
-                $.ajax({
-                    type: "GET",
-                    dataType: "json",
-                    url: "/api/forge/jstree",
-                    cashe:false,
-                    data: { 'hubid' : $(this).val()},
-                }).done(function(result) {
-                    console.log(result);
-                    $('#jstree').jstree(true).settings.core.data = result.core.data;
-                    $('#jstree').jstree(true).refresh();
-                }).fail(function(result) {
-                    alert('error!!!');
-                });
-            });
-
-            $('#logout-btn').on('click', function () {
-
-                console.log("#token-btn click!!")
-                location.href = '/api/forge/reset/'
-            });
-
-        });
-
-        function jsTreeInitialize() {
-            var selecter = $("#hub-selecter");
-            console.log(selecter)
-            if (selecter != null) {
-                console.log('index : ' + selecter.get(0).selectedIndex)
-                console.log('value : ' + selecter.get(0).value)
-                $.ajax({
-                    type: "GET",
-                    dataType: "json",
-                    url: "/api/forge/jstree",
-                    cashe: false,
-                    data: {'hubid': selecter.get(0).value},
-                }).done(function (result) {
-                    //console.log(result);
-                    //This is first time initialization
-                    $('#jstree').jstree(result)
-
-                }).fail(function (result) {
-                    alert('error!!!');
-                });
-            }
-        }
-
-        {% else %}
-        $(function () {
-            $('#login-btn').on('click', function () {
-                console.log("#token-btn click!!")
-                $.ajax({
-                    type: "GET",
-                    dataType: "text",
-                    url: "/api/forge/gettoken",
-                    headers : {
-                        'Access-Control-Allow-Origin': 'http://127.0.0.1:8000',
-                        'Access-Control-Allow-Methods':'GET, POST, OPTIONS',
-                    },
-                    cashe:false,
-                }).done(function(redirecturl) {
-                    console.log(redirecturl)
-                    location.href = redirecturl;
-
-                }).fail(function( jqXHR, textStatus, errorThrown ) {
-                    console.log(jqXHR)
-                    console.log(textStatus)
-                    console.log(errorThrown)
-                    //alert(textStatus);
-                });
-            });
-
-        });
-        {% endif %}
-        {#% if IsAutheroized %#} //loadViewer(token, urn, expires_in); {#% endif %#}
-    </script>
-
-{% endblock extra_head_js %}
+{% endblock extra_js %}
 
 
 {% block body_class %}nav-sm{% endblock %}
 
 {% block content %}
-
     <div class="right_col" role="main" style="min-height: 928px;">
+        <div class="loading-bg" id="loading">
+            <img src="/static/images/loading.gif" class="loading-icon">
+        </div>
         <div class="page-header">
            <h2> Welcome to Forge Viewer Sample Site !! </h2>
         </div>
-
         <div class="row" style="margin-bottom: 30px">
             <div class="col-xs-12">
-                <!-- <a href="/api/forge/gettoken" class="btn btn-primary {% if IsAutheroized %} django-hide {% endif %} ">login</a> -->
-                <!-- <a href="/api/forge/reset" class="btn btn-success {% if not IsAutheroized %} django-hide {% endif %} ">logged in </a> -->
                 <div class="btn-group" data-toggle="buttons">
                     <button class="btn {% if IsAutheroized %} btn-success active {% else %} btn-default {% endif %}"  id="login-btn" >
                         login
@@ -172,6 +75,68 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-exclamation-circle"></i>
+                            READEME / NOTES
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link" id="readme-collapse">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <ul class="to_do">
+                            <li>
+                                <span class="label label-info">info</span>
+                                <small> You need Autodesk accounts,and login from above button </small>
+                            </li>
+                            <li>
+                                <span class="label label-info">info</span>
+                                <small> You need access to your BIM360 Docs / Team. Recomended Hub Site is ==> [ <a href="https://docs.b360.autodesk.com/projects/3c37a064-9aad-4484-aac3-5afc3a06b623/folders/urn:adsk.wipprod:fs.folder:co.iusGs8j1TIOpX-21u-SfZg/detail"> Autodesk Cunsulting Japan</a> ]</small>
+                            </li>
+                            <li>
+                                <span class="label label-warning">warning</span>
+                                <small> At first time, this application fetches selected BIM360 Docs / Team folders at once,and cache it to DB.(maximum hierarchy depth is 5). usually It takes several minutes.</small>
+                            </li>
+                            <li>
+                                <span class="label label-warning">warning</span>
+                                <small>Only the following list is supported modern browsers.</small>
+                            </li>
+                            <row><div class="col-xs-4">
+                                <table class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Browser</th>
+                                            <th>Version</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th>1</th>
+                                            <td>Chrome</td>
+                                            <td>69.0.x(64bit)</td>
+                                        </tr>
+                                        <tr>
+                                            <th>2</th>
+                                            <td>Firefox</td>
+                                            <td>62.0.x(64bit)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div></row>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="row">
             {% if IsAutheroized %}
             <div class="col-xs-12">
@@ -191,38 +156,68 @@
                         <div class="clearfix"></div>
                     </div>
                     <div class="x_content">
-                        <select class="form-control" id="hub-selecter">
-                            {% for itr in hublist %}
-                                <option value="{{ itr.id }}">{{itr.attributes.name}} (id: {{ itr.id }})</option>
-                            {% endfor %}
-                        </select>
+                        <div class="row">
+                            <div class="col-xs-12" style="padding-bottom: 10px">
+                                <select class="form-control" id="hub-selecter">
+                                    {% for itr in hublist %}
+                                        <option value="{{ itr.id }}">{{itr.attributes.name}} (id: {{ itr.id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xs-12">
+                                <button class="btn btn-primary is-hide" id="fetch-btn" type="button">fetch all .rvt (It takes several minutes.)</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
             </div>
             {% endif %}
         </div>
         <div class="row">
-            <div class="col-xs-4">
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2><i class="fa fa-folder"></i>
-                            Folder Hierarchy
-                        </h2>
-                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
-                            <li>
-                                <a class="collapse-link">
-                                    <i class="fa fa-chevron-up"></i>
-                                </a>
-                            </li>
-                        </ul>
-                        <div class="clearfix"></div>
+            <div class="col-lg-4 col-xs-12">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2><i class="fa fa-folder"></i>
+                                    Folder Hierarchy
+                                </h2>
+                                <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                                    <li>
+                                        <a class="collapse-link">
+                                            <i class="fa fa-chevron-up"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content jstree-scroll-box">
+                                <div id="jstree"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="x_content jstree-scroll-box">
-                        <div id="jstree"></div>
+                    <div class="col-xs-12">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2><i class="fa fa-database"></i>
+                                    Model Hierarchy
+                                </h2>
+                                <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                                    <li>
+                                        <a class="collapse-link">
+                                            <i class="fa fa-chevron-up"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <div id="jstree-objects"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-xs-8">
+            <div class="col-lg-8  col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
                         <h2><i class="fa fa-camera-retro"></i>
@@ -243,7 +238,67 @@
                 </div>
             </div>
         </div>
-
+        <div class="row">
+            <div class="col-lg-6  col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-table"></i>
+                            Model Raw Properties
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content" id="panel-info">
+                       <table id="forge-table-info" class="table table-striped table-bordered">
+                            <thead>
+                              <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6  col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-table"></i>
+                            Item Raw Properties
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <table id="forge-table-prop" class="table table-striped table-bordered">
+                            <thead>
+                              <tr>
+                                <th>Key</th>
+                                <th>Value</th>
+                                <th>Category</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 {% endblock %}

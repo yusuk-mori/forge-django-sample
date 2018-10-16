@@ -26,7 +26,7 @@
 
 {% endblock extra_css %}
 
-{% block extra_head_js %}
+{% block extra_js %}
 
     <!-- Datatables -->
     <script src="/static/vendors/datatables.net/js/jquery.dataTables.min.js"></script>
@@ -41,32 +41,22 @@
     <script src="/static/vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
     <script src="/static/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js"></script>
     <script src="/static/vendors/datatables.net-scroller/js/dataTables.scroller.min.js"></script>
-
     <script src="/static/js/custom.js"></script>
-
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js?v=v2.10"></script> -->
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.js?v=v2.10"></script> -->
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/viewer3D.min.js"></script>
     <script src="/static/js/jstree.min.js"></script>
-
-    <!-- <script src="/static/js/entry.js"></script> -->
-    <!-- <script type="module" src="/static/js/Viewer.Extensions/Viewing.MultiModelExtensionBase/Viewing.MultiModelExtensionBase.js"></script> -->
-    <!-- <script type="module" src="/static/js/Viewing.Extension.VisualReport/Viewing.Extension.VisualReport.js"></script> -->
-    <!-- <script src="/static/js/forgeviewer.js"></script> -->
-    <!--<script src="/static/js/components/d3/d3.js"></script>-->
-    <!--<script src="/static/js/components/d3pie/d3pie/d3pie.js"></script>-->
-    <!--<script src="/static/js/components/dragula/dist/dragula.js"></script>-->
     <!--<script type="module" src="/static/js/forgeviewer.module.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script> -->
     <script src="/static/js/forgeviewer.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script>
 
-{% endblock extra_head_js %}
+{% endblock extra_js %}
 
 
 {% block body_class %}nav-sm{% endblock %}
 
 {% block content %}
     <div class="right_col" role="main" style="min-height: 928px;">
-        <div class="loading-bg is-hide" id="loading">
+        <div class="loading-bg" id="loading">
             <img src="/static/images/loading.gif" class="loading-icon">
         </div>
         <div class="page-header">
@@ -94,7 +84,7 @@
                         </h2>
                         <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
                             <li>
-                                <a class="collapse-link">
+                                <a class="collapse-link" id="readme-collapse">
                                     <i class="fa fa-chevron-up"></i>
                                 </a>
                             </li>

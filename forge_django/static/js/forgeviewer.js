@@ -433,7 +433,8 @@ $(function () {
         console.log('switch to isAutheroized !!')
         // 6 create an instance when the DOM is ready
         //$('#jstree').jstree(treedata);
-        jsTreeInitialize()
+        jsTreeInitialize();
+        closeReandeMeCollapse();
 
         // 7 bind to events triggered on the tree
         $('#jstree').on("changed.jstree", function (e, data) {
@@ -493,14 +494,18 @@ $(function () {
         });
 
         $('#logout-btn').on('click', function () {
-
+            showLoading();
             console.log("#token-btn click!!")
             location.href = '/api/forge/reset/'
         });
 
     }else{
+        jsTreeSetDefault();
+        jsTreeObjectsSetDefault();
+
         $('#login-btn').on('click', function () {
-            console.log("#token-btn click!!")
+            console.log("#token-btn click!!");
+            showLoading();
             $.ajax({
                 type: "GET",
                 dataType: "text",
@@ -513,12 +518,13 @@ $(function () {
             }).done(function(redirecturl) {
                 console.log(redirecturl)
                 location.href = redirecturl;
-
             }).fail(function( jqXHR, textStatus, errorThrown ) {
                 console.log(jqXHR)
                 console.log(textStatus)
                 console.log(errorThrown)
                 //alert(textStatus);
+            }).always(function(){
+                //hideLoading();
             });
         });
     }
@@ -548,6 +554,7 @@ $(function () {
         });
     });
 
+    hideLoading();
 });
 
 function jsTreeInitialize() {
@@ -671,4 +678,11 @@ function resetTableProp() {
 
 function resetTableInfo(){
     resetTableBase("forge-table-info",  ["key", "value"]);
+}
+
+function closeReandeMeCollapse() {
+    let collapse = document.getElementById("readme-collapse")
+    if (null != collapse){
+        collapse.click()
+    }
 }
