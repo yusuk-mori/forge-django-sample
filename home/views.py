@@ -1,3 +1,13 @@
+#=======================================================================================================================
+#   Copyright (c) Autodesk, Inc. All rights reserved
+#   Written by Yusuke Mori, Autodesk Consulting 2018
+#
+#   This software is provided as is, without any warranty that it will work. You choose to use this tool at your own risk.
+#   Neither Autodesk nor the authors can be taken as responsible for any damage this tool can cause to
+#   your data. Please always make a back up of your data prior to use this tool.
+#
+#=======================================================================================================================
+
 
 # Django Imports
 from django.shortcuts import render
@@ -108,6 +118,26 @@ def foge_get_jstree(request):
                 forgeCC.update_cache(hubid, request.session['token-type'], request.session['access-token'])
                 jstree = forgeCC.get_jstree_from_cache(hubid)
 
+        else:
+            bad_request()
+    else:
+        bad_request()
+
+    return JsonResponse(jstree)
+
+
+def foge_get_jstree_onlycache(request):
+    # DEBUG
+    http.dump_request(request)
+
+    jstree={}
+    if (request.method == 'GET'):
+        hubid = request.GET.get('hubid')
+        if hubid:
+            # Get jstree data from DB cache table
+            jstree = forgeCC.get_jstree_from_cache(hubid)
+            if not jstree:
+                jstree ={ 'error' : True, 'message' : "cache doesn't exist" }
         else:
             bad_request()
     else:
