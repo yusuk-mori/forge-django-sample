@@ -1,3 +1,13 @@
+#=======================================================================================================================
+#   Copyright (c) Autodesk, Inc. All rights reserved
+#   Written by Yusuke Mori, Autodesk Consulting 2018
+#
+#   This software is provided as is, without any warranty that it will work. You choose to use this tool at your own risk.
+#   Neither Autodesk nor the authors can be taken as responsible for any damage this tool can cause to
+#   your data. Please always make a back up of your data prior to use this tool.
+#
+#=======================================================================================================================
+
 """forge_django URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -41,7 +51,8 @@ urlpatterns = [
     url(r'^api/forge/reset/', forge_views.forge_session_reset),
 
     # Ajax API
-    url(r'^api/forge/jstree', forge_views.foge_get_jstree),
+    url(r'^api/forge/jstree$', forge_views.foge_get_jstree),
+    url(r'^api/forge/jstree-cache$', forge_views.foge_get_jstree_onlycache),
 
 ]
 

@@ -527,8 +527,12 @@ class ForgeDataManagementAdopter(ForgeBaseAdopter):
                     icon = "fa fa-folder"
                     id = items['data'][index]['id']
                 else:
-                    icon = "fa fa-file-o"
-                    id = items['data'][index]['relationships']['tip']['data']['id']
+                    # [MEMO] if the data hasn't "tip" field, it means it has no svf bucket data for forge viewer
+                    if '.rvt' in items['data'][index]['attributes']['displayName']:
+                        icon = "fa fa-file-o"
+                        id = items['data'][index]['relationships']['tip']['data']['id']
+                    else:
+                        continue
 
                 itr = { 'id':id, 'parent':parent, 'text':text, 'icon':icon, 'lastmodtime':lastmod }
                 items_array.append(itr)

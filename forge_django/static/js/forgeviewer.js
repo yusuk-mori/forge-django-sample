@@ -1,3 +1,12 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) Autodesk, Inc. All rights reserved
+// Written by Yusuke Mori, Autodesk Consulting 2018
+//
+//   This software is provided as is, without any warranty that it will work. You choose to use this tool at your own risk.
+//   Neither Autodesk nor the authors can be taken as responsible for any damage this tool can cause to
+//   your data. Please always make a back up of your data prior to use this tool.
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var viewerApp;
 //var viewer;
@@ -304,7 +313,7 @@ SelectEventExtension.prototype.load = function() {
             tr.appendChild(th);
 
             th = document.createElement('th');
-            th.innerHTML = "type";
+            th.innerHTML = "category";
             tr.appendChild(th);
 
             thead.appendChild(tr);
@@ -451,19 +460,36 @@ $(function () {
             $.ajax({
                 type: "GET",
                 dataType: "json",
-                url: "/api/forge/jstree",
+                url: "/api/forge/jstree-cache",
                 cashe:false,
                 data: { 'hubid' : $(this).val()},
             }).done(function(result) {
                 console.log(result);
-                $('#jstree').jstree(true).settings.core.data = result.core.data;
-                $('#jstree').jstree(true).refresh();
-            }).fail(function(result) {
-                alert('error!!!');
+
+                if (result['error']){
+                    console.log('/api/forge/jstree-cache return nothing.')
+                    //[MEMO] If there is not DB cache data yet, user can start fetch all command.
+                    //show "fetch all" button
+                    showFetchButton();
+                    //Set #jstree default data
+                    jsTreeSetDefault();
+                }else{
+                    hideFetchButton();
+                    $('#jstree').jstree(true).settings.core.data = result.core.data;
+                    $('#jstree').jstree(true).refresh();
+                }
+
+            }).fail(function( jqXHR, textStatus, errorThrown ) {
+                console.log(jqXHR)
+                console.log(textStatus)
+                console.log(errorThrown)
+                alert(textStatus);
             }).always(function(){
                 hideLoading();
+                jsTreeObjectsSetDefault();
+                resetTableProp();
+                resetTableInfo();
             });
-
         });
 
         $('#logout-btn').on('click', function () {
@@ -496,6 +522,32 @@ $(function () {
             });
         });
     }
+
+    //Always set these event callback
+    $('#fetch-btn').on('click', function () {
+        console.log("#fetch-btn click!!")
+        showLoading();
+        $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: "/api/forge/jstree",
+            cashe:false,
+            data: { 'hubid' : $("#hub-selecter").val()},
+        }).done(function(result) {
+            console.log(result)
+            $('#jstree').jstree(true).settings.core.data = result.core.data;
+            $('#jstree').jstree(true).refresh();
+            hideFetchButton();
+        }).fail(function( jqXHR, textStatus, errorThrown ) {
+            console.log(jqXHR)
+            console.log(textStatus)
+            console.log(errorThrown)
+            //alert(textStatus);
+        }).always(function () {
+            hideLoading();
+        });
+    });
+
 });
 
 function jsTreeInitialize() {
@@ -508,13 +560,21 @@ function jsTreeInitialize() {
         $.ajax({
             type: "GET",
             dataType: "json",
-            url: "/api/forge/jstree",
+            url: "/api/forge/jstree-cache",
             cashe: false,
             data: {'hubid': selecter.get(0).value},
         }).done(function (result) {
-            //console.log(result);
-            //This is first time initialization
-            $('#jstree').jstree(result)
+            if (result['error']){
+                //[MEMO] If there is not DB cache data yet, user can start fetch all command.
+                //show "fetch all" button
+                showFetchButton();
+                //Set #jstree default data
+                jsTreeSetDefault();
+
+            }else{
+                //This is first time initialization
+                $('#jstree').jstree(result)
+            }
         }).fail(function (result) {
             alert('error!!!');
         }).always(function () {
@@ -522,10 +582,33 @@ function jsTreeInitialize() {
         });
     }
 
+    // set #jstree-objects default data
+    jsTreeObjectsSetDefault();
+}
+
+function jsTreeSetDefault() {
+        //set default empty data set and initialize jstree
+        let defaultdata = {}
+        defaultdata["core"] = {}
+        defaultdata["core"]["data"] = [{"id":1000, "parent" :"#", "text":"No Hub Site Fetched Yet", "icon":"fa fa-warning" }]
+        if( null != $('#jstree').jstree(true).settings) {
+            $('#jstree').jstree(true).settings.core.data = defaultdata.core.data;
+            $('#jstree').jstree(true).refresh();
+        }else {
+            $('#jstree').jstree(defaultdata)
+        }
+}
+
+function jsTreeObjectsSetDefault() {
     let defaultdata = {}
     defaultdata["core"] = {}
     defaultdata["core"]["data"] = [{"id":1000, "parent" :"#", "text":"No Model Selected", "icon":"fa fa-warning" }]
-    $('#jstree-objects').jstree(defaultdata);
+    if( null != $('#jstree-objects').jstree(true).settings) {
+        $('#jstree-objects').jstree(true).settings.core.data = defaultdata.core.data;
+        $('#jstree-objects').jstree(true).refresh();
+    }else {
+        $('#jstree-objects').jstree(defaultdata);
+    }
 }
 
 function hideLoading(){
@@ -536,4 +619,56 @@ function hideLoading(){
 function showLoading(){
     $( "#loading" ).fadeIn("slow");
     $( "#loading" ).removeClass("is-hide");
+}
+
+function hideFetchButton(){
+    $( "#fetch-btn" ).fadeOut("slow");
+    $( "#fetch-btn" ).addClass("is-hide");
+}
+
+function showFetchButton(){
+    $( "#fetch-btn" ).fadeIn("slow");
+    $( "#fetch-btn" ).removeClass("is-hide");
+}
+
+function resetTableBase(idname, threads){
+    let wrapper = document.getElementById(idname + "_wrapper");
+    if (null != wrapper) {
+        let parent = wrapper.parentNode;
+        let container = document.createElement('table');
+        container.setAttribute("id", idname);
+        container.classList.add("table", "table-striped", "table-bordered");
+
+        let tr;
+        let th;
+        let td;
+
+        let thead = document.createElement('thead');
+
+        tr = document.createElement('tr');
+
+        threads.forEach(function(itr){
+            th = document.createElement('th');
+            th.innerHTML = itr;
+            tr.appendChild(th);
+        });
+
+        thead.appendChild(tr);
+        container.appendChild(thead);
+
+        let tbody = document.createElement('tbody');
+        container.appendChild(tbody);
+
+        parent.innerHTML = '';
+        parent.appendChild(container);
+        $("#"+idname).DataTable();
+    }
+}
+
+function resetTableProp() {
+    resetTableBase("forge-table-prop", ["key", "value",  "category"]);
+}
+
+function resetTableInfo(){
+    resetTableBase("forge-table-info",  ["key", "value"]);
 }
