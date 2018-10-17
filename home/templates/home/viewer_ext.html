@@ -18,7 +18,7 @@
         }
         #forgeViewer {
             width: 100%;
-            height: 600px;
+            height: 450px;
             margin: 0;
             background-color: #F0F8FF;
         }
@@ -41,12 +41,14 @@
     <script src="/static/vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
     <script src="/static/vendors/datatables.net-responsive-bs/js/responsive.bootstrap.js"></script>
     <script src="/static/vendors/datatables.net-scroller/js/dataTables.scroller.min.js"></script>
+    <script src="/static/vendors/echarts/dist/echarts.js"></script>
     <script src="/static/js/custom.js"></script>
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/three.min.js?v=v2.10"></script> -->
     <!-- <script src="https://developer.api.autodesk.com/viewingservice/v1/viewers/viewer3D.js?v=v2.10"></script> -->
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/viewer3D.min.js"></script>
     <script src="/static/js/jstree.min.js"></script>
     <!--<script type="module" src="/static/js/forgeviewer.module.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script> -->
+    <script src="/static/js/forgeviewer.charts.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script>
     <script src="/static/js/forgeviewer.js" id="forgeviewer-script" token="{{ token }}" expires_in="{{ expires_in }}" is_auth="{{ IsAutheroized }}"></script>
 
 {% endblock extra_js %}
@@ -92,25 +94,29 @@
                         <div class="clearfix"></div>
                     </div>
                     <div class="x_content">
-                        <ul class="to_do">
-                            <li>
-                                <span class="label label-info">info</span>
-                                <small> You need Autodesk accounts,and login from above button </small>
-                            </li>
-                            <li>
-                                <span class="label label-info">info</span>
-                                <small> You need access to your BIM360 Docs / Team. Recomended Hub Site is ==> [ <a href="https://docs.b360.autodesk.com/projects/3c37a064-9aad-4484-aac3-5afc3a06b623/folders/urn:adsk.wipprod:fs.folder:co.iusGs8j1TIOpX-21u-SfZg/detail"> Autodesk Cunsulting Japan</a> ]</small>
-                            </li>
-                            <li>
-                                <span class="label label-warning">warning</span>
-                                <small> At first time, this application fetches selected BIM360 Docs / Team folders at once,and cache it to DB.(maximum hierarchy depth is 5). usually It takes several minutes.</small>
-                            </li>
-                            <li>
-                                <span class="label label-warning">warning</span>
-                                <small>Only the following list is supported modern browsers.</small>
-                            </li>
-                            <row><div class="col-xs-4">
-                                <table class="table table-striped table-bordered">
+                        <div class="row">
+                            <div class="col-xs-8">
+                                <ul class="to_do">
+                                    <li>
+                                        <span class="label label-info">info</span>
+                                        <small> You need Autodesk accounts,and login from above button </small>
+                                    </li>
+                                    <li>
+                                        <span class="label label-info">info</span>
+                                        <small> You need access to your BIM360 Docs / Team. Recomended Hub Site is ==> [ <a href="https://docs.b360.autodesk.com/projects/3c37a064-9aad-4484-aac3-5afc3a06b623/folders/urn:adsk.wipprod:fs.folder:co.iusGs8j1TIOpX-21u-SfZg/detail"> Autodesk Cunsulting Japan</a> ]</small>
+                                    </li>
+                                    <li>
+                                        <span class="label label-warning">warning</span>
+                                        <small> At first time, this application fetches selected BIM360 Docs / Team folders at once,and cache it to DB.(maximum hierarchy depth is 5). usually It takes several minutes.</small>
+                                    </li>
+                                    <li>
+                                        <span class="label label-warning">warning</span>
+                                        <small>Only the right table lists supported browsers.</small>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-xs-4">
+                                <table class="table table-striped table-hover">
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -131,50 +137,47 @@
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div></row>
-                        </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row">
-            {% if IsAutheroized %}
-            <div class="col-xs-12">
-                <div class="x_panel">
-                    <div class="x_title">
-                        <h2><i class="fa fa-bars"></i>
-                            Hub Site List
-                            <small>select your site !!</small>
-                        </h2>
-                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
-                            <li>
-                                <a class="collapse-link">
-                                    <i class="fa fa-chevron-up"></i>
-                                </a>
-                            </li>
-                        </ul>
-                        <div class="clearfix"></div>
-                    </div>
-                    <div class="x_content">
-                        <div class="row">
-                            <div class="col-xs-12" style="padding-bottom: 10px">
-                                <select class="form-control" id="hub-selecter">
-                                    {% for itr in hublist %}
-                                        <option value="{{ itr.id }}">{{itr.attributes.name}} (id: {{ itr.id }})</option>
-                                    {% endfor %}
-                                </select>
+            <div class="col-lg-4  col-xs-12">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2><i class="fa fa-bars"></i>
+                                    Hub Site List
+                                    <small>select your site !!</small>
+                                </h2>
+                                <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                                    <li>
+                                        <a class="collapse-link">
+                                            <i class="fa fa-chevron-up"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
                             </div>
-                            <div class="col-xs-12">
-                                <button class="btn btn-primary is-hide" id="fetch-btn" type="button">fetch all .rvt (It takes several minutes.)</button>
+                            <div class="x_content">
+                                <div class="row">
+                                    <div class="col-xs-12" style="padding-bottom: 10px">
+                                        <select class="form-control" id="hub-selecter">
+                                            {% for itr in hublist %}
+                                                <option value="{{ itr.id }}">{{itr.attributes.name}} (id: {{ itr.id }})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-xs-12">
+                                        <button class="btn btn-primary is-hide" id="fetch-btn" type="button">fetch all .rvt (It takes several minutes.)</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-            </div>
-            {% endif %}
-        </div>
-        <div class="row">
-            <div class="col-lg-4 col-xs-12">
-                <div class="row">
                     <div class="col-xs-12">
                         <div class="x_panel">
                             <div class="x_title">
@@ -195,29 +198,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xs-12">
-                        <div class="x_panel">
-                            <div class="x_title">
-                                <h2><i class="fa fa-database"></i>
-                                    Model Hierarchy
-                                </h2>
-                                <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
-                                    <li>
-                                        <a class="collapse-link">
-                                            <i class="fa fa-chevron-up"></i>
-                                        </a>
-                                    </li>
-                                </ul>
-                                <div class="clearfix"></div>
-                            </div>
-                            <div class="x_content">
-                                <div id="jstree-objects"></div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
-            <div class="col-lg-8  col-xs-12">
+            <div class="col-lg-4  col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
                         <h2><i class="fa fa-camera-retro"></i>
@@ -237,13 +220,11 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-6  col-xs-12">
+            <div class="col-lg-4  col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2><i class="fa fa-table"></i>
-                            Model Raw Properties
+                        <h2><i class="fa fa-bar-chart"></i>
+                            Category Ratio
                         </h2>
                         <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
                             <li>
@@ -255,24 +236,20 @@
                         <div class="clearfix"></div>
                     </div>
                     <div class="x_content" id="panel-info">
-                       <table id="forge-table-info" class="table table-striped table-bordered">
-                            <thead>
-                              <tr>
-                                <th>Key</th>
-                                <th>Value</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
+                        <div id="chart-category"></div>
+                        <div id="chart-category-nodata" class="xpanel-center">
+                            <span><i class="fa fa-warning"></i> No Data </span>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6  col-xs-12">
+        </div>
+        <div class="row">
+            <div class="col-lg-4  col-xs-12">
                 <div class="x_panel">
                     <div class="x_title">
-                        <h2><i class="fa fa-table"></i>
-                            Item Raw Properties
+                        <h2><i class="fa fa-bar-chart"></i>
+                            Wall Finishes Analysis
                         </h2>
                         <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
                             <li>
@@ -283,22 +260,60 @@
                         </ul>
                         <div class="clearfix"></div>
                     </div>
-                    <div class="x_content">
-                        <table id="forge-table-prop" class="table table-striped table-bordered">
-                            <thead>
-                              <tr>
-                                <th>Key</th>
-                                <th>Value</th>
-                                <th>Category</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
+                    <div class="x_content" id="panel-info">
+                        <div id="chart-wall"></div>
+                        <div id="chart-wall-nodata" class="xpanel-center">
+                            <span><i class="fa fa-warning"></i> No Data </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4  col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-bar-chart"></i>
+                            Floor Finishes Analysis
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content" id="panel-info">
+                        <div id="chart-floor"></div>
+                        <div id="chart-floor-nodata" class="xpanel-center">
+                            <span><i class="fa fa-warning"></i> No Data </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4  col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-bar-chart"></i>
+                            Ceiling Scatter Analysis
+                        </h2>
+                        <ul class="nav navbar-right panel_toolbox" style="min-width: 35px">
+                            <li>
+                                <a class="collapse-link">
+                                    <i class="fa fa-chevron-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content" id="panel-info">
+                        <div id="chart-ceiling" class="xpanel-center"></div>
+                        <div id="chart-ceiling-nodata" class="xpanel-center">
+                            <span><i class="fa fa-warning"></i> No Data </span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
 {% endblock %}

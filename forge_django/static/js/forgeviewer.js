@@ -41,8 +41,16 @@ function initializeViewer(token, expired_sec, urn, elmid) {
     registerExtentions()
 
     var config3d = {
-      extensions: ['SelectEventExtension']
+      extensions: []
     };
+
+    //check if extension is loaded at this page.
+    if("function" == typeof(SelectEventExtension)) {
+        config3d.extensions.push('SelectEventExtension');
+    }
+    if("function" == typeof(ChartsExtension)) {
+        config3d.extensions.push('ChartsExtension');
+    }
 
     Autodesk.Viewing.Initializer(options, function onInitialized(){
         viewerApp = new Autodesk.Viewing.ViewingApplication(viewerElementId);
@@ -118,8 +126,14 @@ function base64encode(str) {
  * extension register
  */
 function registerExtentions(){
+    //check if extension is loaded at this page..
+    if("function" == typeof(SelectEventExtension)) {
+        Autodesk.Viewing.theExtensionManager.registerExtension('SelectEventExtension', SelectEventExtension);
+    }
 
-    Autodesk.Viewing.theExtensionManager.registerExtension('SelectEventExtension', SelectEventExtension);
+    if("function" == typeof(ChartsExtension)) {
+        Autodesk.Viewing.theExtensionManager.registerExtension('ChartsExtension', ChartsExtension);
+    }
 }
 
 //=====================================================================================================================
@@ -276,7 +290,7 @@ SelectEventExtension.prototype.load = function() {
             $("#forge-table-info").DataTable()
 
         }else{
-            console.error('container not found !!')
+            console.error('wrapper container not found !!')
         }
     });
 
