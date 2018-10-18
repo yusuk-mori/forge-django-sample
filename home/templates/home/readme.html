@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load markdownify %}
+
+{% block extra_css %}
+    <!-- <link rel="stylesheet" href="https://developer.api.autodesk.com/viewingservice/v1/viewers/style.min.css"/> -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/style.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/js/themes/default/style.min.css" />
+
+{% endblock extra_css %}
+
+{% block extra_js %}
+    <script src="/static/js/custom.js"></script>
+{% endblock extra_js %}
+
+
+{% block body_class %}nav-sm{% endblock %}
+
+{% block content %}
+    <div class="right_col" role="main" style="min-height: 928px;">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-file-o"></i>
+                            README
+                        </h2>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        {{ text | markdownify }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

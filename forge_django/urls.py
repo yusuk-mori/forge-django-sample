@@ -44,6 +44,12 @@ urlpatterns = [
     url(r'^viewer-ext/', forge_views.viewer_ext),
     url(r'^viewer-ext/(?P<key>.*$)', forge_views.viewer_ext),
 
+    # README
+    url(r'^readme$', forge_views.readme),
+
+    # Profile
+    url(r'^profile$', forge_views.profile),
+
     # Authentication
     url(r'^api/forge/gettoken-deprecated/', forge_views.forge_get_code_deprecated),
     url(r'^api/forge/gettoken/', forge_views.forge_3legged_redirect),

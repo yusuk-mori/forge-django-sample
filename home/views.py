@@ -8,6 +8,11 @@
 #
 #=======================================================================================================================
 
+import os
+import json
+import urlparse
+import pprint
+
 
 # Django Imports
 from django.shortcuts import render
@@ -21,17 +26,8 @@ from django.http import HttpResponseServerError
 from django.http import HttpResponseNotFound
 from django.http import HttpResponseForbidden
 
-#from django.contrib import auth
-#from django.contrib.auth.decorators import login_required
-#from django.contrib.auth.models import User
-#from django.template import RequestContext
-
 from django.views.defaults import server_error, bad_request
 from django.contrib.sites.shortcuts import get_current_site
-
-import json
-import urlparse
-import pprint
 
 from forge_django.settings import base as settings
 from home.models import AutodeskAccounts
@@ -55,6 +51,8 @@ OAUTH_CALLBACK_URL = settings.ADSK_FORGE['FORGE_AUTH_CALLBACK']
 View Utilities 
 ======================================================================================================
 '''
+
+
 def get_guestuser():
     account = None
 
@@ -99,8 +97,11 @@ def forge_check_accessToken(request):
 Request View Handlers
 ======================================================================================================
 '''
+
+
 def forge_index(request):
     return redirect('forge-home/')
+
 
 def foge_get_jstree(request):
     # DEBUG
@@ -144,7 +145,6 @@ def foge_get_jstree_onlycache(request):
         bad_request()
 
     return JsonResponse(jstree)
-
 
 
 def viewer_ext(request):
@@ -220,6 +220,7 @@ def viewer_ext(request):
     except Exception as e:
         logger.warning(e.message, trace=True)
         return server_error(request)
+
 
 def forge_home(request):
     try:
@@ -421,18 +422,66 @@ def forge_3legged_callback(request):
         return server_error(request)
 
 
+def readme(request):
+    try:
+        # Account
+        guest_account = get_guestuser()
+        if guest_account:
+            data = {
+                'text': '',
+                'account': guest_account
+            }
+        else:
+            logger.message('guest accounts is not found. Please check database settings...')
+            return server_error(request)
+
+        # markdown path
+        path = os.path.join(os.path.dirname(__file__), '..', 'README.md')
+        logger.debug('path=%s' % path)
+
+        with open(path, mode='r') as mdfile:
+            # Read text
+            content = mdfile.read()
+            data['text'] = content
+
+        return render(request, 'home/readme.html', context=data)
+
+    except Exception as e:
+        logger.warning(e.message, trace=True)
+        return server_error(request)
+
+
+def profile(request):
+    try:
+        pass
+    except Exception as e:
+        logger.warning(e.message, trace=True)
+        return server_error(request)
+
+
+'''
+======================================================================================================
+Error Page Handlers
+======================================================================================================
+'''
+
+
 def error400(request):
     data = {}
     return render(request, '400.html', data)
+
 
 def error403(request):
     data = {}
     return render(request, '403.html', data)
 
+
 def error404(request):
     data = {}
     return render(request, '404.html', data)
 
+
 def error500(request):
     data = {}
     return render(request, '500.html', data)
+

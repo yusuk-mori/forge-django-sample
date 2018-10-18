@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Readme.html
+    'markdownify',
+
     # Access-Control-Allow-Origin issue.
     'corsheaders',
 ]
@@ -149,15 +152,56 @@ STATIC_URL = '/static/'
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://forge-django-sample.com'
 
+# Markdownify Settings
+MARKDOWNIFY_WHITELIST_TAGS = [
+    'a',
+    'abbr',
+    'acronym',
+    'b',
+    'blockquote',
+    'em',
+    'i',
+    'li',
+    'ol',
+    'p',
+    'strong',
+    'ul',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'br',
+    'hr',
+    'img',
+    'code',
+    'pre',
+    'div',
+    'span',
+]
 
+MARKDOWNIFY_WHITELIST_ATTRS = [
+    'href',
+    'src',
+    'alt',
+    'width',
+    'height',]
+
+MARKDOWNIFY_MARKDOWN_EXTENSIONS = ['markdown.extensions.fenced_code',
+                                   'markdown.extensions.extra', ]
+
+# ALLOWED HOSTS Settings from environment.json
 ALLOWED_HOSTS=environment.ALLOWED_HOSTS
 
+# Forge Application ID and secret key
 ADSK_FORGE = {
         'FORGE_CLIENT_ID': environment.FORGE_CLIENT_ID,
         'FORGE_CLIENT_SECRET': environment.FORGE_CLIENT_SECRET,
-        'FORGE_AUTH_CALLBACK' : environment.FORGE_AUTH_CALLBACK
+        'FORGE_AUTH_CALLBACK': environment.FORGE_AUTH_CALLBACK
     }
 
+# Django's Logger Settings
 LOGGING = {
     'version': 1,
     'formatters': {
