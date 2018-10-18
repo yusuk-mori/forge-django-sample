@@ -1,0 +1,28 @@
+{
+  "host_map": {
+    "YOUR_PRODUCTION_HOSTNAME": "Production",
+    "YOUR_STAGE_HOSTNAME": "Stage",
+    "YOUR_DEV_HOSTNAME": "Development",
+    "YOUR_LOCAL_HOSTNAME": "Development",
+  },
+  "type_definition": {
+    "Production":{
+        "FORGE_CLIENT_ID": "Your App Clinet ID",
+        "FORGE_CLIENT_SECRET": "Your App Secret Key",
+        "FORGE_AUTH_CALLBACK" : "Your APP 3-Legged Authentication Callback URL",
+        "ALLOWED_HOSTS": []
+    },
+    "Stage":{
+        "FORGE_CLIENT_ID": "Your App Clinet ID",
+        "FORGE_CLIENT_SECRET": "Your App Secret Key",
+        "FORGE_AUTH_CALLBACK" : "Your APP 3-Legged Authentication Callback URL",
+        "ALLOWED_HOSTS": []
+    },
+    "Development":{
+        "FORGE_CLIENT_ID": "Your App Clinet ID",
+        "FORGE_CLIENT_SECRET": "Your App Secret Key",
+        "FORGE_AUTH_CALLBACK" : "Your APP 3-Legged Authentication Callback URL",
+        "ALLOWED_HOSTS": ["localhost", "127.0.0.1"]
+    }
+  }
+}

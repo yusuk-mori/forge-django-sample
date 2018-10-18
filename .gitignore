@@ -7,3 +7,4 @@
 *.svg
 *.zip
 *.DS_Store
+/forge_django/environment.json
