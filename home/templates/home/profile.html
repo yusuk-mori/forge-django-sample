@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+    <!-- <link rel="stylesheet" href="https://developer.api.autodesk.com/viewingservice/v1/viewers/style.min.css"/> -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/6.2/style.min.css" type="text/css">
+    <link rel="stylesheet" href="/static/js/themes/default/style.min.css" />
+
+{% endblock extra_css %}
+
+{% block extra_js %}
+    <script src="/static/js/custom.js"></script>
+{% endblock extra_js %}
+
+
+{% block body_class %}nav-sm{% endblock %}
+
+{% block content %}
+    <div class="right_col" role="main" style="min-height: 928px;">
+        <div class="row">
+            <div class="col-xs-offset-3 col-xs-6">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2><i class="fa fa-file-text-o"></i>
+                            Author Profile
+                        </h2>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        <div class="row">
+                            <div class="col-xs-12 xpanel-center">
+                                <img src="static/images/profile.png" class="img-circle profile_img" style="width: 150px">
+                            </div>
+                            <section id="name">
+                                <h4 class="page-header"><i class="fa fa-male"></i>   Yusuke Moei</h4>
+                                <small>Associate Technical Consultant, WWFO-CSO-Consulting Delivery</small>
+                            </section>
+                            <section id="org">
+                                <h4 class="page-header"><i class="fa fa-map-marker"></i>   Autodesk Ltd. Japan</h4>
+                                <small>Japan - Tokyo - Tokyo - 11F/24F/25F, Harumi Island Triton Square Office Tower X, 1-8-10, Harumi, Chuo-ku - 11011 - Tokyo Harumi Island Triton Square Office Tower X 1-8-10 Harumi Chuo-ku</small>
+                            </section>
+                            <section>
+                                <h4 class="page-header"><i class="fa fa-envelope"></i>    yusuke.mori@autodesk.com</h4>
+                            </section>
+                            <section>
+                                <h4 class="page-header"><i class="fa fa-github"></i>    https://github.com/yusuk-mori</h4>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

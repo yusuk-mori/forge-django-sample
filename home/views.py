@@ -453,7 +453,18 @@ def readme(request):
 
 def profile(request):
     try:
-        pass
+        # Account
+        guest_account = get_guestuser()
+        if guest_account:
+            data = {
+                'account': guest_account
+            }
+        else:
+            logger.message('guest accounts is not found. Please check database settings...')
+            return server_error(request)
+
+        return render(request, 'home/profile.html', context=data)
+
     except Exception as e:
         logger.warning(e.message, trace=True)
         return server_error(request)
