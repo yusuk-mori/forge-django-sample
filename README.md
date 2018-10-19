@@ -1,4 +1,4 @@
-# Autodesk Froge API + Django Sample
+# Autodesk Forge API + Django Sample
 
 Sample code of simple python library for Forge API, Django project includes the library, and javascript Forge Viewer Extensions.<br>
 This is just for my self-training and investigation.  
@@ -26,28 +26,19 @@ This is just for my self-training and investigation.
 * And see `requirement.txt`
         
 ```
-beautifulsoup4==4.6.0  
-bleach==3.0.2      
-certifi==2018.8.24  
-chardet==3.0.4  
-Django==1.10  
-django-cors-headers==2.4.0  
-django-markdownify==0.8.0  
-django-modelcluster==3.1  
-django-taggit==0.22.2  
-django-treebeard==4.3  
-djangorestframework==3.6.4  
-html5lib==0.999999999  
-idna==2.7  
-Markdown==3.0.1  
-Pillow==5.3.0  
-pytz==2018.5  
-requests==2.19.1  
-six==1.11.0  
-Unidecode==1.0.22  
-urllib3==1.23  
-webencodings==0.5.1   
-Willow==0.4
+bleach==3.0.2
+certifi==2018.10.15
+chardet==3.0.4
+Django==1.10
+django-cors-headers==2.4.0
+django-markdownify==0.8.0
+idna==2.7
+Markdown==3.0.1
+pytz==2018.5
+requests==2.19.1
+six==1.11.0
+urllib3==1.23
+webencodings==0.5.1
 ```  
 
 #### Javascript
@@ -154,7 +145,8 @@ And access `http://localhost:8000`
 
 ---
 ## Demo Site
-TBD
+AWS Demo Site:  
+[https://ec2-13-112-156-246.ap-northeast-1.compute.amazonaws.com/forge-home/](https://ec2-13-112-156-246.ap-northeast-1.compute.amazonaws.com/forge-home/)
 
 ---
 ## Captures
