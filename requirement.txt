@@ -1,7 +1,7 @@
 bleach==3.0.2
 certifi==2018.10.15
 chardet==3.0.4
-Django==1.10
+Django==2.2.24
 django-cors-headers==2.4.0
 django-markdownify==0.8.0
 idna==2.7
